@@ -1,0 +1,5 @@
+09/24/2015
+● Created MainActivity, SlidingTabLayout with Location and List tabs
+● SlidingTabLayout was from Google iosched repository
+● Had trouble putting icons on the tabs.
+● Plan for next week: put Google map Location tab screen and show user's current location
