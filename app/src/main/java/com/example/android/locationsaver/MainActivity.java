@@ -1,16 +1,14 @@
 package com.example.android.locationsaver;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     ViewPager mViewPager;
     Toolbar mToolbar;
     SlidingTabLayout mSlidingTabs;
+    Fragment mLocationFragment, mListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,14 +43,38 @@ public class MainActivity extends AppCompatActivity {
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter = new SectionsPagerAdapter(this.getFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                //stop location update when user switch out of LocationFragment
+                if (position == 1)  {
+                    mLocationFragment.onPause();
+//                    frag.onStop();
+                }
+                else {
+                    mLocationFragment.onResume();
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         mSlidingTabs = (SlidingTabLayout) findViewById(R.id.tabs);
-        mSlidingTabs.setDistributeEvenly(true); // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+        // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+        mSlidingTabs.setDistributeEvenly(true);
 //        mSlidingTabs.setCustomTabView(R.layout.tab_view, R.id.tab_name_img);
 
         // Setting Custom Color for the Scroll bar indicator of the Tab View
@@ -110,23 +133,28 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
             if (position == 0) {
-                return new LocationFragment();
+                if (mLocationFragment == null) {
+                    mLocationFragment = new LocationFragment();
+                }
+                return mLocationFragment;
             } else {
-                return new ListFragment();
+                if (mListFragment == null) {
+                    mListFragment = new ListFragment();
+                }
+                return mListFragment;
             }
         }
 
         @Override
         public int getCount() {
-            // Show 3 total pages
+            // Show 2 total pages
             return 2;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            Locale l = Locale.getDefault();
+//            Locale l = Locale.getDefault();
             switch (position) {
                 case 0:
                     return getString(R.string.title_location_tab);
