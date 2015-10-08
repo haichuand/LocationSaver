@@ -57,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 //stop location update when user switch out of LocationFragment
+                if (mLocationFragment == null) {
+                    return;
+                }
                 if (position == 1)  {
                     mLocationFragment.onPause();
 //                    frag.onStop();

@@ -1,6 +1,7 @@
 package com.example.android.locationsaver;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,6 +46,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     private MapFragment mMapFragment;
     private GoogleMap mMap;
     private boolean mMoveCameraToCurrentLocation;
+    private MainActivity mActivity;
 
 
     public LocationFragment() {
@@ -54,8 +56,8 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        buildGoogleApiClient();
         createLocationRequest();
+
     }
 
     @Override
@@ -76,13 +78,14 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onResume() {
         super.onResume();
+        mActivity = (MainActivity) getActivity();
         if (mGoogleApiClient==null) {
             buildGoogleApiClient();
         }
         if(!mGoogleApiClient.isConnected()){
             mGoogleApiClient.connect();
         }
-        else {
+        else if (mActivity.mViewPager.getCurrentItem()==0) { //only when current fragment is being viewed
             startLocationUpdates();
         }
         mMoveCameraToCurrentLocation = true;
@@ -91,9 +94,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
     @Override
     public void onPause() {
-        // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-        if(getActivity()==null)
-            Log.d(TAG, "onPause: getActivity() returns null");
+//        // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
+//        if(mActivity==null)
+//            Log.d(TAG, "onPause: getActivity() returns null");
         stopLocationUpdates();
         super.onPause();
     }
@@ -104,8 +107,13 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         super.onStop();
     }
 
+    @Override
+    public void onAttach(Context context) {
+
+    }
+
     private synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+        mGoogleApiClient = new GoogleApiClient.Builder(mActivity)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -139,12 +147,15 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
         // The final argument to {@code requestLocationUpdates()} is a LocationListener
         // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        if(mGoogleApiClient!=null && mGoogleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
     @Override
     public void onConnected(Bundle bundle) {
-        startLocationUpdates();
+        mActivity = (MainActivity) getActivity();
+        if (mActivity.mViewPager.getCurrentItem()==0)
+            startLocationUpdates();
     }
 
 
