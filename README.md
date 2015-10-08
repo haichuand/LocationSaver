@@ -16,3 +16,10 @@ Weekly Activity Log<br>
 ● Implemented OnPageChangeListener in ViewPager to listen for fragment switches, so that navigating away from LocationFragment stops location updates<br>
 ● Lesson: FragmentPagerAdapter.getItem(int position) returns new fragments by default, so do not use it to retrieve current fragments. Instead, create member variables in main activity to point to current fragments <br>
 ● Plan for next week: start implementing data base for storing location data <br>
+
+10/8/2015<br>
+● Added location list view in ListFragment, which is subclassed from RecyclerView<br>
+● Created LocationListAdapter to manage data for location list view, subclassed from RecyclerView.Adapter<br>
+● Created SQLite database (LocationDBHandler) to store location data. Current schema specifies these fields: name, longitutde, latitude, address, image_path of location. Connected the database with LocationListAdapter through cursor in constructor of LocationListAdapter. Currently the database is populated with 8 test locations.<br>
+● Lesson: need to create small thumbnail images for location list view. Large images will slow down page and list scrolling a lot<br>
+● Plan for next week: implement floating action add button in LocationFragment to add current location to database<br>
