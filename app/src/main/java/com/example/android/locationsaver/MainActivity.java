@@ -1,17 +1,21 @@
 package com.example.android.locationsaver;
 
-import android.os.Bundle;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.os.Bundle;
+import android.os.Environment;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.File;
 
+public class MainActivity extends AppCompatActivity {
+    private String TAG = "MainActivity";
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -91,6 +95,12 @@ public class MainActivity extends AppCompatActivity {
         // Setting the ViewPager For the SlidingTabsLayout
         mSlidingTabs.setViewPager(mViewPager);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                makeImageDirectory();
+            }
+        }).run();
     }
 
 
@@ -170,6 +180,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int getPageIconResId(int position) {
             return iconRes[position];
+        }
+    }
+
+    public void makeImageDirectory() {
+        String imageDirectory = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES).getPath()+"/LocationSaverImages";
+        File file = new File(imageDirectory);
+        if (!file.exists()) {
+            if (!file.mkdirs())
+                Log.d(TAG, "Error making directory "+file.getPath());
         }
     }
 

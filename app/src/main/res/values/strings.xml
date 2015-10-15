@@ -6,7 +6,22 @@
 
     <string name="action_settings">Settings</string>
 
-<!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="text_accuracy_string"></string>
+    <string name="edit_entry_name">Name</string>
+    <string name="edit_entry_address">Address</string>
+    <string name="edit_entry_coords">Coords</string>
+    <string name="edit_entry_note">Note</string>
+    <string name="edit_entry_save_button">Save</string>
+    <string name="edit_entry_cancel_button">Cancel</string>
+
+    <string name="no_location_data_provided">FetchAddressService: no location data received</string>
+    <string name="service_not_available">FetchAddressService: Geocoder service not available</string>
+    <string name="invalid_lat_long_used">FetchAddressService: invalid latitude/longitude</string>
+    <string name="no_address_found">FetchAddressService: no address found</string>
+    <string name="address_found">FetchAddressService: address found</string>
+
+    <string name="no_geocoder_available">Geocoder unavailable. No address updates.</string>
+
+    <string name="error_making_directory">Error making directory</string>
 </resources>

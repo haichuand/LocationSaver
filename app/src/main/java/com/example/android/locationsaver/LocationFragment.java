@@ -2,9 +2,11 @@ package com.example.android.locationsaver;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +38,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     //location update interval in milliseconds
     private final int UPDATE_INTERVAL=5000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
+    //default zooms to street level
     private final float DEFAULT_MAP_ZOOM=18;
     private final String TAG = "LocationFragment";
 
@@ -47,7 +50,8 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     private GoogleMap mMap;
     private boolean mMoveCameraToCurrentLocation;
     private MainActivity mActivity;
-
+    private TextView mAccuracyView;
+    private int mAccuracy; //accuracy of current location
 
     public LocationFragment() {
         // Required empty public constructor
@@ -56,6 +60,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActivity = (MainActivity) getActivity();
         createLocationRequest();
 
     }
@@ -67,6 +72,14 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         mMapFragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mMap = mMapFragment.getMap();
         mMap.setMyLocationEnabled(true);
+        mAccuracyView = (TextView) view.findViewById(R.id.text_accuracy);
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_save_location);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveCurrentLocation();
+            }
+        });
         return view;
     }
 
@@ -78,7 +91,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onResume() {
         super.onResume();
-        mActivity = (MainActivity) getActivity();
+
         if (mGoogleApiClient==null) {
             buildGoogleApiClient();
         }
@@ -103,13 +116,14 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
     @Override
     public void onStop() {
-        mGoogleApiClient.disconnect();
+        if (mGoogleApiClient!= null)
+            mGoogleApiClient.disconnect();
         super.onStop();
     }
 
     @Override
     public void onAttach(Context context) {
-
+        super.onAttach(context);
     }
 
     private synchronized void buildGoogleApiClient() {
@@ -174,20 +188,14 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public void onLocationChanged(Location location) {
         Log.d(TAG, "onLocationChanged() called");
         mCurrentLocation = location;
-        updateAccuracyView();
+        mAccuracy = Math.round(mCurrentLocation.getAccuracy()*3);
+        mAccuracyView.setText("Accuracy: " + mAccuracy + " feet");
         if (mMoveCameraToCurrentLocation) {
             moveMapCamera();
             mMoveCameraToCurrentLocation = false;
         }
     }
 
-    private void updateAccuracyView() {
-        TextView accuracyView = (TextView) getView().findViewById(R.id.text_accuracy);
-        if (mCurrentLocation!=null) {
-            int accuracy = Math.round(mCurrentLocation.getAccuracy());
-            accuracyView.setText("Accuracy: " + accuracy + " meters");
-        }
-    }
 
     private void moveMapCamera() {
         if (mCurrentLocation!= null) {
@@ -198,11 +206,12 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         }
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+
+    public void saveCurrentLocation() {
+        Intent intent = new Intent(mActivity, EditEntryActivity.class);
+        intent.putExtra(Constants.SOURCE, Constants.LOCATION_FRAGMENT);
+        intent.putExtra(Constants.BUNDLE_LOCATION, mCurrentLocation);
+        startActivity(intent);
     }
 
 //    @Override

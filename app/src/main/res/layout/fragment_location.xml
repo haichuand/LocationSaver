@@ -27,7 +27,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_margin="16dp"
-        android:src="@drawable/add_icon" />
+        android:src="@drawable/add_icon"/>
 
 
 </RelativeLayout>

@@ -72,22 +72,23 @@ public class LocationDBHandler extends SQLiteOpenHelper {
 
     public void insertTestRows() {
         LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8;
+        String sdPath = Constants.IMAGE_DIRECTORY;
         loc1 = new LocationItem("Seattle Waterfront", 46.315134, -119.39579,
-                "Alaskan Way & Pike St, Seattle, WA 98001, USA", "/sdcard/LocationSaverImages/1.jpg");
+                "Alaskan Way & Pike St, Seattle, WA 98001, USA", sdPath+"1.jpg");
         loc2 = new LocationItem("2015-09-07_113247", 36.159431, -121.672289,
-                "McWay Waterfall Trail, Big Sur, CA 93920", "/sdcard/LocationSaverImages/2.jpg");
+                "McWay Waterfall Trail, Big Sur, CA 93920", sdPath+"2.jpg");
         loc3 = new LocationItem("GGB", 37.791693, -122.484574,
-                "Presidio, San Francisco, CA", "/sdcard/LocationSaverImages/3.jpg");
+                "Presidio, San Francisco, CA", sdPath+"3.jpg");
         loc4 = new LocationItem("Test Location", -37.45251, 17.6051341,
-                "Daerah Khusus Ibukota Jakarta 10210, Indonesia", "/sdcard/LocationSaverImages/4.jpg");
+                "Daerah Khusus Ibukota Jakarta 10210, Indonesia", sdPath+"4.jpg");
         loc5 = new LocationItem("NiceView Australia", -34.331451, 145.723574,
-                "Warrawidgee NSW 2680 Australia", "/sdcard/LocationSaverImages/5.jpg");
+                "Warrawidgee NSW 2680 Australia", sdPath+"5.jpg");
         loc6 = new LocationItem("Mt. Rainier", 37.368146, -122.029694,
-                "Mt. Rainier National Park, WA, USA", "/sdcard/LocationSaverImages/6.jpg");
+                "Mt. Rainier National Park, WA, USA", sdPath+"6.jpg");
         loc7 = new LocationItem("Tokyo Downtown", 35.680679, 139.738279,
-                "1-1 Kiyosu-bashi Dori, Chiyoda-ku, Tokyo, Japan", "/sdcard/LocationSaverImages/7.jpg");
+                "1-1 Kiyosu-bashi Dori, Chiyoda-ku, Tokyo, Japan", sdPath+"7.jpg");
         loc8 = new LocationItem("Doctor's Office", 36.104361, -112.111494,
-                "Coconino County, AZ", "/sdcard/LocationSaverImages/8.jpg");
+                "Coconino County, AZ", sdPath+"8.jpg");
         List<LocationItem> list = new ArrayList<LocationItem>();
         list.add(loc1);
         list.add(loc2);
