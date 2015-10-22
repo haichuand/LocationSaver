@@ -29,12 +29,15 @@ Weekly Activity Log<br>
 ● Hooked FloatingActionButton in LocationFragment with EditEntryActivity, so that on pressing the button, LocationFragment launches EditEntryActivity through an ex;licit intent and passes the current location object.<br>
 ● EditEntryActivity populates the name field with current date and time, then gets the location object and use it to populate the coordinates field. It also gets address in text through GoogleApiClient Geocoder and shows in address field. The note field is populated with accuracy through location object.<br>
 ● On pressing the camera icon in EditEntryActivity, the phone's camera app is lauched through startActivityForResult with an implicit intent and extras containing the image file path. The camera saves the image in the designated path upon completion.<br>
-● Implemented onActivityResult callback in EditEntryActivity to process image from camera. Lauches an Asynctask to get bitmap of the image and scale it to generate a thumbnail image for display.
+● Implemented onActivityResult callback in EditEntryActivity to process image from camera. Lauches an Asynctask to get bitmap of the image and scale it to generate a thumbnail image for display.<br>
 ● Problems encountered: 1. Application does not launch in Marshmallow due to permission issues. Runs fine in Lollipop. 2. Sometimes images from camera app won't decode correctly. Seems to happen in photos taken under low light.<br>
 ● Plan for next week: debug, then implment Save button to save location in database.<br>
+<<<<<<< HEAD
 
 10/22/2015<br>
 ● Implemented save button in EditEntryActivity to insert item into database.<br>
 ● Added "edit" and "delete" action buttons to Toolbar in ListFragment.<br>
 ● Used State List Drawable to allow selection of multiple items in ListFragment.<br>
 ● Plan for next week: debug current program and implement short click to open location in mapping app.<br>
+=======
+>>>>>>> 9b3fafefd21193d9efd43ae1a89778817b2186c9
