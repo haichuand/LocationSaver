@@ -24,4 +24,19 @@
     <string name="no_geocoder_available">Geocoder unavailable. No address updates.</string>
 
     <string name="error_making_directory">Error making directory</string>
+
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+
+    <string name="select_one_item">Please select one location to edit</string>
+    <string name="name_field_required">Please enter a valid name</string>
+    <string name="number_field_invalid">Please enter a valid coordinate</string>
+
+    <string name="delete_items_alert">Confirm delete</string>
+    <string name="delete_item_message_1">Delete </string>
+    <string name="delete_item_message_2"> item?</string>
+    <string name="delete_items_message_1">Delete these </string>
+    <string name="delete_items_message_2"> items?</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

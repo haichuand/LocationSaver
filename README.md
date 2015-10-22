@@ -32,3 +32,9 @@ Weekly Activity Log<br>
 ● Implemented onActivityResult callback in EditEntryActivity to process image from camera. Lauches an Asynctask to get bitmap of the image and scale it to generate a thumbnail image for display.
 ● Problems encountered: 1. Application does not launch in Marshmallow due to permission issues. Runs fine in Lollipop. 2. Sometimes images from camera app won't decode correctly. Seems to happen in photos taken under low light.<br>
 ● Plan for next week: debug, then implment Save button to save location in database.<br>
+
+10/22/2015<br>
+● Implemented save button in EditEntryActivity to insert item into database.<br>
+● Added "edit" and "delete" action buttons to Toolbar in ListFragment.<br>
+● Used State List Drawable to allow selection of multiple items in ListFragment.<br>
+● Plan for next week: debug current program and implement short click to open location in mapping app.<br>

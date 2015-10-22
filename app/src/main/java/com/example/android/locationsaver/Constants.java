@@ -14,12 +14,15 @@ public final class Constants {
             "com.example.android.locationsaver";
 
     public static final String BUNDLE_LOCATION = PACKAGE_NAME + ".LOCATION";
+    public static final String BUNDLE_DB_ROWID = PACKAGE_NAME + ".DB_ROWID";
 
     public static final String RECEIVER = PACKAGE_NAME + ".RECEIVER";
 
     public static final String RESULT_DATA_KEY = PACKAGE_NAME + ".RESULT_DATA_KEY";
 
     public static final String LOCATION_FRAGMENT = PACKAGE_NAME + ".LocationFragment";
+
+    public static final String LIST_FRAGMENT = PACKAGE_NAME + ".ListFragment";
 
     public static final String SOURCE = "SOURCE_FRAGMENT"; //tag to indicate source of intent
 
@@ -28,4 +31,8 @@ public final class Constants {
             .getPath()+"/LocationSaverImages/";
 
     public static final String THUMBNAIL_IMAGE_URI = "thumbnail image Uri";
+
+    public static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 138;
+
+    public static final int EDIT_ENTRY_ACTIVITY_REQUEST_CODE = 945;
 }

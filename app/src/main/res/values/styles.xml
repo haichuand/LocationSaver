@@ -3,4 +3,5 @@
         <item name="colorPrimary">@color/ColorPrimary</item>
         <item name="colorPrimaryDark">@color/ColorPrimaryDark</item>
     </style>
+    <color name="activated">#81C784</color>
 </resources>

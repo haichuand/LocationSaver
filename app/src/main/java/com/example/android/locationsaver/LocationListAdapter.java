@@ -11,10 +11,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapter.LocationViewHolder> {
-    private static final int LOCATION_NAME_INDEX = 1, LOCATION_LATITUDE_INDEX = 2,
-            LOCATION_LONGITUDE_INDEX = 3, LOCATION_ADDRESS_INDEX = 4, LOCATION_IMAGE_INDEX = 5;
+    ArrayList<Long> selectedRowList = new ArrayList<>();
 
     interface LocationListListener {
         void onListItemClicked(int position);
@@ -38,15 +38,27 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
     @Override
     public void onBindViewHolder(LocationViewHolder viewHolder, int position) {
         mCursor.moveToPosition(position);
-        viewHolder.mLocationName.setText(mCursor.getString(LOCATION_NAME_INDEX));
-        viewHolder.mLocationCoordinates.setText(mCursor.getString(LOCATION_LATITUDE_INDEX)
-                + ", " + mCursor.getString(LOCATION_LONGITUDE_INDEX));
-        viewHolder.mLocationAddress.setText(mCursor.getString(LOCATION_ADDRESS_INDEX));
-
-        File imgFile = new  File(mCursor.getString(LOCATION_IMAGE_INDEX));
-        if(imgFile.exists()){
-            Uri uri = Uri.fromFile(imgFile);
-            viewHolder.mLocationImage.setImageURI(uri);
+        viewHolder.mRowId = mCursor.getLong(LocationDBHandler._ID);
+        String name = mCursor.getString(LocationDBHandler.NAME);
+        viewHolder.mLocationName.setText(name);
+        viewHolder.mLocationCoordinates.setText(mCursor.getDouble(LocationDBHandler.LATITUDE)
+                + ", " + mCursor.getDouble(LocationDBHandler.LONGITUDE));
+        String address = mCursor.getString(LocationDBHandler.ADDRESS);
+        if (address != null) {
+            address = address.replace("\n", ", ");
+        }
+        viewHolder.mLocationAddress.setText(address);
+        String imgString = mCursor.getString(LocationDBHandler.IMAGE);
+        File imgFile;
+        if (imgString!=null){
+            imgFile = new  File(imgString);
+            if(imgFile.exists()) {
+                Uri uri = Uri.fromFile(imgFile);
+                viewHolder.mLocationImage.setImageURI(uri);
+            }
+        }
+        else {
+            viewHolder.mLocationImage.setImageURI(null);
         }
     }
 
@@ -55,13 +67,44 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
         return mCursor.getCount();
     }
 
+    public void changeCursor(Cursor newCursor) {
+        if (mCursor != null) {
+            mCursor.close();
+        }
+        mCursor = newCursor;
+    }
+
+//    private void changeOptionsMenu() {
+//        if (selectedRowList.isEmpty()) {
+//            menu.findItem(R.id.action_delete).setVisible(false);
+//            menu.findItem(R.id.action_edit).setVisible(false);
+//            getActivity().invalidateOptionsMenu();
+//        }
+//    }
     class LocationViewHolder extends RecyclerView.ViewHolder {
-        public TextView mLocationName, mLocationCoordinates, mLocationAddress;
-        public ImageView mLocationImage;
+        TextView mLocationName, mLocationCoordinates, mLocationAddress;
+        ImageView mLocationImage;
+        long mRowId = -1;
 
         public LocationViewHolder (View v) {
             super(v);
             //Todo: setOnClickListener() to create intent to open location in mapping app
+            v.setSelected(false);
+            v.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    if (view.isSelected()) {
+                        view.setSelected(false);
+                        selectedRowList.remove(new Long(mRowId));
+//                        changeOptionsMenu();
+                    }
+                    else {
+                        view.setSelected(true);
+                        selectedRowList.add(new Long(mRowId));
+                    }
+                    return true;
+                }
+            });
 
             mLocationName = (TextView) v.findViewById(R.id.location_name);
             mLocationCoordinates = (TextView) v.findViewById(R.id.location_coordinates);

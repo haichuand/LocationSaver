@@ -2,6 +2,7 @@ package com.example.android.locationsaver;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -32,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
     ViewPager mViewPager;
     Toolbar mToolbar;
     SlidingTabLayout mSlidingTabs;
-    Fragment mLocationFragment, mListFragment;
+//    LocationFragment mLocationFragment;
+//    ListFragment mListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,15 +63,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 //stop location update when user switch out of LocationFragment
-                if (mLocationFragment == null) {
-                    return;
-                }
+                LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
                 if (position == 1)  {
-                    mLocationFragment.onPause();
-//                    frag.onStop();
+                    locationFragment.onPause();
                 }
                 else {
-                    mLocationFragment.onResume();
+                    locationFragment.onResume();
                 }
             }
 
@@ -113,12 +112,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -126,6 +121,19 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("MainActivity", "onActivityResult() called");
+        if (requestCode==Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode==RESULT_OK) {
+            mViewPager.setCurrentItem(1);
+            ListFragment listFragment = (ListFragment) findCurrentFragment(1);
+            listFragment.onListItemChanged();
+        }
+    }
+
+    private Fragment findCurrentFragment(int position) {
+        return getFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
+    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -147,15 +155,17 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             if (position == 0) {
-                if (mLocationFragment == null) {
-                    mLocationFragment = new LocationFragment();
-                }
-                return mLocationFragment;
+                return new LocationFragment();
+//                if (mLocationFragment == null) {
+//                    mLocationFragment = new LocationFragment();
+//                }
+//                return mLocationFragment;
             } else {
-                if (mListFragment == null) {
-                    mListFragment = new ListFragment();
-                }
-                return mListFragment;
+                return new ListFragment();
+//                if (mListFragment == null) {
+//                    mListFragment = new ListFragment();
+//                }
+//                return mListFragment;
             }
         }
 

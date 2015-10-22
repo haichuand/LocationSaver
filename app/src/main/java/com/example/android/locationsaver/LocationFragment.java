@@ -122,6 +122,11 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     }
 
     @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data) {
+        mActivity.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
     }
@@ -211,19 +216,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         Intent intent = new Intent(mActivity, EditEntryActivity.class);
         intent.putExtra(Constants.SOURCE, Constants.LOCATION_FRAGMENT);
         intent.putExtra(Constants.BUNDLE_LOCATION, mCurrentLocation);
-        startActivity(intent);
+        startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
     }
 
-//    @Override
-//    public void onAttach(Activity activity) {
-//        super.onAttach(activity);
-//        try {
-//            mListener = (OnFragmentInteractionListener) activity;
-//        } catch (ClassCastException e) {
-//            throw new ClassCastException(activity.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
-//    }
 
     @Override
     public void onDetach() {
