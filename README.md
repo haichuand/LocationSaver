@@ -38,3 +38,10 @@ Weekly Activity Log<br>
 ● Added "edit" and "delete" action buttons to Toolbar in ListFragment.<br>
 ● Used State List Drawable to allow selection of multiple items in ListFragment.<br>
 ● Plan for next week: debug current program and implement short click to open location in mapping app.<br>
+
+10/29/2015<br>
+● Changed location item layout in ListFragment for better navigation<br>
+● Added click listener to image to edit the item in EditEntryActivity, and click listener on text to open the location in mapping app via implicit intent<br>
+● Changed LongClickListener to enter or multi-selection mode. When in multi-selection mode, a checkbox appears in each item for faster selection<br>
+● Added contextual toolbar through ActionMode in multi-selection mode, with title displaying selection count and delete and edit icons<br>
+● Plan for next week: change style of EditEntryActivity to be consistent with app theme; add get location function in EditEntryActivity<br>

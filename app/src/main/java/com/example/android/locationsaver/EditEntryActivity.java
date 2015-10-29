@@ -19,6 +19,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -40,7 +42,10 @@ import java.util.Date;
 
 public class EditEntryActivity extends AppCompatActivity implements
         ConnectionCallbacks, OnConnectionFailedListener {
-    private static final String TAG = "EditEntryActivity";
+    private static final String TAG = "EditEntryActivity"; //tag for logging
+    //tags to indicate if imageView is icon or image
+    private static final int ICON_VIEW = 10;
+    private static final int IMAGE_VIEW = 20;
     private Toolbar mToolbar;
     private EditText mNameView, mCoordView, mNoteView, mAddressView;
     private ImageView mImageView;
@@ -48,7 +53,7 @@ public class EditEntryActivity extends AppCompatActivity implements
     //flag to indicate if we want to get address through FetchAddressService
     private View.OnClickListener mImageClickListener;
     protected GoogleApiClient mGoogleApiClient;
-
+    private boolean mDeleteImageFlag;
     /*Receiver registered with this activity to get the response from FetchAddressIntentService.*/
     private AddressResultReceiver mResultReceiver;
     //image file saved from camera app
@@ -61,6 +66,7 @@ public class EditEntryActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        buildGoogleApiClient();
         setContentView(R.layout.activity_edit_entry);
         mToolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(mToolbar);
@@ -77,53 +83,7 @@ public class EditEntryActivity extends AppCompatActivity implements
                 startCameraForImage();
             }
         };
-        buildGoogleApiClient();
-
-//        if (savedInstanceState == null) {
-//            Intent intent = getIntent();
-//            if (intent != null) {
-//                String source = intent.getStringExtra(Constants.SOURCE);
-//                //intent is coming from LocationFragment to save location
-//                if (source.equals(Constants.LOCATION_FRAGMENT)) {
-//                    if (TextUtils.isEmpty(mNameView.getText())) {
-//                        mNameView.setHint(DateFormat.getDateTimeInstance().format(new Date()));
-//                    }
-//                    mImageView.setImageResource(R.drawable.icon_camera);
-//                    mImageView.setOnClickListener(mImageClickListener);
-//                    mLocation = intent.getParcelableExtra(Constants.BUNDLE_LOCATION);
-//                    int accuracyFeet = (int) mLocation.getAccuracy() * 3;
-//                    mLatitude = mLocation.getLatitude();
-//                    mLongitude = mLocation.getLongitude();
-//                    mCoordView.setText(mLatitude + ", " + mLongitude);
-//                    mNoteView.setText("Accuracy: " + accuracyFeet + " feet");
-//                }
-//                //intent is coming from ListFragment to edit list
-//                else if (source.equals(Constants.LIST_FRAGMENT)) {
-//                    mRowId = intent.getLongExtra(Constants.BUNDLE_DB_ROWID, -1);
-//                    String sqlString = "SELECT * FROM " + LocationDBHandler.LocationEntry.TABLE +
-//                            " WHERE " + LocationDBHandler.LocationEntry._ID + "=" + mRowId;
-//                    Cursor cursor = mDbHandler.getReadableDatabase().rawQuery(sqlString, null);
-//                    mNameView.setText(cursor.getString(LocationDBHandler.NAME));
-//                    mCoordView.setText(cursor.getDouble(LocationDBHandler.LATITUDE) + ", " +
-//                            cursor.getDouble(LocationDBHandler.LONGITUDE));
-//                    mAddressView.setText(cursor.getString(LocationDBHandler.ADDRESS));
-//                    mNoteView.setText(cursor.getString(LocationDBHandler.NOTE));
-//                    mThumbnailImagePath = cursor.getString(LocationDBHandler.IMAGE);
-//                    if (mThumbnailImagePath != null) {
-//                        mImageView.setImageURI(Uri.parse(mThumbnailImagePath));
-//                    }
-//                    else {
-//                        mImageView.setImageURI(null);
-//                    }
-//                }
-//            }
-//        }
-//        else {
-//            mThumbnailImagePath = savedInstanceState.getString(Constants.THUMBNAIL_IMAGE_URI);
-//            if(mThumbnailImagePath != null) {
-//                mImageView.setImageURI(Uri.parse(mThumbnailImagePath));
-//            }
-//        }
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
     }
 
@@ -136,16 +96,21 @@ public class EditEntryActivity extends AppCompatActivity implements
     @Override
     public void onResume() {
         super.onResume();
+        mDeleteImageFlag = false;
         mDbHandler = new LocationDBHandler(this);
         Intent intent = getIntent();
         if (intent != null) {
             String source = intent.getStringExtra(Constants.SOURCE);
+            if (source == null) {
+                return;
+            }
             //intent is coming from LocationFragment to save location
             if (source.equals(Constants.LOCATION_FRAGMENT)) {
                 if (TextUtils.isEmpty(mNameView.getText())) {
                     mNameView.setHint(DateFormat.getDateTimeInstance().format(new Date()));
                 }
                 mImageView.setImageResource(R.drawable.icon_camera);
+                mImageView.setTag(ICON_VIEW);
                 mImageView.setOnClickListener(mImageClickListener);
                 mLocation = intent.getParcelableExtra(Constants.BUNDLE_LOCATION);
                 int accuracyFeet = (int) mLocation.getAccuracy() * 3;
@@ -153,6 +118,7 @@ public class EditEntryActivity extends AppCompatActivity implements
                 mLongitude = mLocation.getLongitude();
                 mCoordView.setText(mLatitude + ", " + mLongitude);
                 mNoteView.setText("Accuracy: " + accuracyFeet + " feet");
+                mDeleteImageFlag = true;
             }
             //intent is coming from ListFragment to edit list
             else if (source.equals(Constants.LIST_FRAGMENT)) {
@@ -172,8 +138,22 @@ public class EditEntryActivity extends AppCompatActivity implements
                     } else {
                         mImageView.setImageURI(null);
                     }
+                    mImageView.setTag(IMAGE_VIEW);
                 }
             }
+            ViewGroup.LayoutParams params = mImageView.getLayoutParams();
+            switch ((int) mImageView.getTag()) {
+                case ICON_VIEW:
+                    params.width = 200;
+                    params.height = 200;
+                    break;
+                case IMAGE_VIEW:
+                    params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    mImageView.setMaxHeight(600);
+                    break;
+            }
+            intent.removeExtra(Constants.SOURCE);
         }
     }
 
@@ -263,7 +243,9 @@ public class EditEntryActivity extends AppCompatActivity implements
     }
 
     public void cancelActivity(View v) {
-        deleteImages();
+        if (mDeleteImageFlag) {
+            deleteImages();
+        }
         this.finish();
     }
 
@@ -421,6 +403,11 @@ public class EditEntryActivity extends AppCompatActivity implements
                 return;
             }
             imageView.setImageBitmap(bitmap);
+            ViewGroup.LayoutParams params = mImageView.getLayoutParams();
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            mImageView.setMaxHeight(600);
+            mImageView.setTag(IMAGE_VIEW);
         }
     }
 

@@ -35,4 +35,11 @@ public final class Constants {
     public static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 138;
 
     public static final int EDIT_ENTRY_ACTIVITY_REQUEST_CODE = 945;
+
+    public static final int CLICK_SOURCE_IMAGE = 418;
+    public static final int CLICK_SOURCE_TEXT = 204;
+    public static final int CLICK_DESELECT = 579;
+    public static final int CLICK_ENTER_MULTISELECT_MODE = 356;
+    public static final int CLICK_EXIT_MULTISELECT_MODE = 683;
+    public static final int CLICK_SELECTION_COUNT_CHANGED = 801;
 }
