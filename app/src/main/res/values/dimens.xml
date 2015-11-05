@@ -3,7 +3,6 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="EditEntryActivity_image_height">600dp</dimen>
+    <dimen name="EditEntryActivity_image_height">800dp</dimen>
 
-    <integer name="thumbnail_size_pixel">800</integer>
 </resources>

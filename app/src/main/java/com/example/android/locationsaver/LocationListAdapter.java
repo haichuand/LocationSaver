@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapter.LocationViewHolder> {
     //    ArrayList<Long> mSelectedRowList = new ArrayList<>();
     ArrayList<Integer> mSelectedItemList = new ArrayList<>();
-//    boolean isMultiSelect = false; //flag for whether in multi-selection state
+    boolean isMultiSelect; //flag for whether in multi-selection state
 
     interface LocationListListener {
         void onListItemClicked(int clickSource);
@@ -31,6 +31,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
     public LocationListAdapter(Cursor cursor, LocationListListener listener) {
         mCursor = cursor;
         mListener = listener;
+        isMultiSelect = false;
     }
 
     @Override
@@ -46,10 +47,20 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
 
         Boolean isSelected = mSelectedItemList.contains(position);
         viewHolder.itemView.setSelected(isSelected);
-        viewHolder.mCheckbox.setVisibility(mSelectedItemList.size()>0 ? View.VISIBLE : View.INVISIBLE);
+        viewHolder.mCheckbox.setVisibility(mSelectedItemList.size() > 0 ? View.VISIBLE : View.INVISIBLE);
         viewHolder.mCheckbox.setOnCheckedChangeListener(null);
         viewHolder.mCheckbox.setChecked(isSelected);
         viewHolder.mCheckbox.setOnCheckedChangeListener(viewHolder);
+
+        if (isMultiSelect) {
+            viewHolder.mLocationImage.setOnClickListener(viewHolder.mMultiSelectClickListener);
+            viewHolder.mTextLayout.setOnClickListener(viewHolder.mMultiSelectClickListener);
+        }
+        else {
+            viewHolder.mLocationImage.setOnClickListener(viewHolder.mImageClickListener);
+            viewHolder.mTextLayout.setOnClickListener(viewHolder.mTextClickListener);
+        }
+
 
 
 //        viewHolder.mRowId = mCursor.getLong(LocationDBHandler._ID);
@@ -97,6 +108,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
     class LocationViewHolder extends RecyclerView.ViewHolder implements View.OnLongClickListener, CompoundButton.OnCheckedChangeListener {
         TextView mLocationName, mLocationCoordinates, mLocationAddress;
         ImageView mLocationImage;
+        View mTextLayout;
         CheckBox mCheckbox;
         //        long mRowId = -1;
         //on clicking image, launches EditEntryActivity to edit this entry
@@ -124,6 +136,13 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
                 }
             }
         };
+        //listener for both image and text in multiselection mode
+        View.OnClickListener mMultiSelectClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LocationViewHolder.this.onLongClick(view);
+            }
+        };
 
         public LocationViewHolder(View v) {
             super(v);
@@ -132,11 +151,12 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
             mLocationAddress = (TextView) v.findViewById(R.id.location_address);
             mLocationImage = (ImageView) v.findViewById(R.id.location_image);
             mCheckbox = (CheckBox) v.findViewById(R.id.checkBox);
+            mTextLayout = v.findViewById(R.id.location_text_layout);
+            //change image and text click listeners depending on if in multiselect mode
+
+
+            mTextLayout.setOnLongClickListener(this);
             mCheckbox.setOnCheckedChangeListener(this);
-            mLocationImage.setOnClickListener(mImageClickListener);
-            View textLayout = v.findViewById(R.id.location_text_layout);
-            textLayout.setOnClickListener(mTextClickListener);
-            textLayout.setOnLongClickListener(this);
             mLocationImage.setOnLongClickListener(this);
         }
 
@@ -150,6 +170,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
                 LocationListAdapter.this.notifyItemChanged(position);
                 if (mSelectedItemList.size() == 0) { //exit multi-selection mode
                     LocationListAdapter.this.notifyDataSetChanged();
+                    isMultiSelect = false;
                     mListener.onListItemClicked(Constants.CLICK_EXIT_MULTISELECT_MODE);
                     return true;
                 }
@@ -161,6 +182,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
                 LocationListAdapter.this.notifyItemChanged(position);
                 if (mSelectedItemList.size() == 1) {
                     LocationListAdapter.this.notifyDataSetChanged();
+                    isMultiSelect = true;
                     mListener.onListItemClicked(Constants.CLICK_ENTER_MULTISELECT_MODE);
                 }
             }
@@ -181,6 +203,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
                 notifyItemChanged(position);
                 if(mSelectedItemList.size() == 0) {
                     notifyDataSetChanged();
+                    isMultiSelect = false;
                     mListener.onListItemClicked(Constants.CLICK_EXIT_MULTISELECT_MODE);
                 }
             }

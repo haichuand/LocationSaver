@@ -134,62 +134,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         return v;
     }
 
-//    @Override
-//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        inflater.inflate(R.menu.context_menu, menu);
-//    }
-
-    /*@Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        if (id == R.id.action_edit) {
-            editLocationItem();
-            return true;
-        } else if (id == R.id.action_delete) {
-            int itemsSelected = mAdapter.mSelectedItemList.size();
-            if (itemsSelected > 0) {
-                String message;
-                if (itemsSelected == 1) {
-                    message = getString(R.string.delete_item_message_1) + " " + itemsSelected
-                            + " " + getString(R.string.delete_item_message_2);
-                } else {
-                    message = getString(R.string.delete_items_message_1) + " " + itemsSelected
-                            + " " + getString(R.string.delete_items_message_2);
-                }
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                        .setTitle(R.string.delete_items_alert).setMessage(message)
-                        .setIcon(android.R.drawable.ic_dialog_alert);
-                AlertDialog dlg = builder.create();
-                dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.ok),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                deleteLocationItems();
-                            }
-                        });
-
-                dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        });
-
-        *//*
-         * Show the modal dialog. Once the user has clicked on a button, the
-         * dialog is automatically removed.
-         *//*
-                dlg.show();
-            }
-
-        }
-        return super.onOptionsItemSelected(item);
-    }*/
 
     private void editLocationItem() {
         int numSelected = mAdapter.mSelectedItemList.size();
@@ -253,21 +197,27 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
                 break;
             case Constants.CLICK_DESELECT:
                 Toast.makeText(getActivity(), R.string.deselect_all_items, Toast.LENGTH_SHORT).show();
+                break;
             case Constants.CLICK_ENTER_MULTISELECT_MODE:
 //                Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.tool_bar);
                 AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
                 mActionMode = appCompatActivity.startSupportActionMode(mActionModeCallback);
+                mAdapter.notifyDataSetChanged();
                 break;
             case Constants.CLICK_EXIT_MULTISELECT_MODE:
                 if (mActionMode != null) {
                     mActionMode.finish();
                 }
+                mAdapter.notifyDataSetChanged();
                 break;
             case Constants.CLICK_SELECTION_COUNT_CHANGED:
                 int selectionCount = mAdapter.mSelectedItemList.size();
                 if (mActionMode != null) {
                     mActionMode.setTitle(selectionCount>0 ? ""+selectionCount : "");
                 }
+                break;
+            default:
+                assert false;
         }
 
     }

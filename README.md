@@ -45,3 +45,10 @@ Weekly Activity Log<br>
 ● Changed LongClickListener to enter or multi-selection mode. When in multi-selection mode, a checkbox appears in each item for faster selection<br>
 ● Added contextual toolbar through ActionMode in multi-selection mode, with title displaying selection count and delete and edit icons<br>
 ● Plan for next week: change style of EditEntryActivity to be consistent with app theme; add get location function in EditEntryActivity<br>
+
+11/05/2015<br>
+● Adjusted margins of list items in ListFragment for better layout<br>
+● Changed click listeners for list items in multiselect mode for better UI experience<br>
+● Removed "Save" and "Cancel" buttons in EditEntryActivity and replaced with Toolbar icons to perform action<br>
+● Added getAddress menu icon in EditEntryActivity to fill address field through FetchAddressService<br>
+● Plan for next week: add "show locations on map" functionality and start implementing sorting functionality in ListFragment<br>

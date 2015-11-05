@@ -12,8 +12,9 @@
     <string name="edit_entry_address">Address</string>
     <string name="edit_entry_coords">Coords</string>
     <string name="edit_entry_note">Note</string>
-    <string name="edit_entry_save_button">Save</string>
-    <string name="edit_entry_cancel_button">Cancel</string>
+    <string name="edit_entry_menu_cancel">Cancel</string>
+    <string name="edit_entry_menu_save">Save</string>
+    <string name="edit_entry_menu_get_address">Get address</string>
 
     <string name="no_location_data_provided">FetchAddressService: no location data received</string>
     <string name="service_not_available">FetchAddressService: Geocoder service not available</string>
@@ -22,6 +23,7 @@
     <string name="address_found">FetchAddressService: address found</string>
 
     <string name="no_geocoder_available">Geocoder unavailable. No address updates.</string>
+    <string name="incorrect_coords">Incorrect coordinates. Address not updated.</string>
 
     <string name="error_making_directory">Error making directory</string>
 
@@ -31,7 +33,7 @@
     <string name="select_one_item">Please select one item to edit</string>
     <string name="name_field_required">Please enter a valid name</string>
     <string name="number_field_invalid">Please enter a valid coordinate</string>
-    <string name="deselect_all_items">Please deselect all items then click</string>
+    <string name="deselect_all_items">To open an entry, deselect all items and click</string>
 
     <string name="delete_items_alert">Confirm delete</string>
     <string name="delete_item_message_1">Delete </string>

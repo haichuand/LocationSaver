@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ListFragment">
+
+    <item
+        android:id="@+id/get_address"
+        android:icon="@drawable/icon_place"
+        android:orderInCategory="100"
+        android:title="@string/edit_entry_menu_get_address"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/cancel"
+        android:icon="@drawable/icon_cancel"
+        android:orderInCategory="100"
+        android:title="@string/edit_entry_menu_cancel"
+        app:showAsAction="always" />
+
+    <!--<item-->
+        <!--android:id="@+id/save"-->
+        <!--android:icon="@drawable/icon_save"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="@string/edit_entry_menu_save"-->
+        <!--app:showAsAction="ifRoom" />-->
+</menu>

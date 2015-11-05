@@ -14,10 +14,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -44,9 +47,8 @@ public class EditEntryActivity extends AppCompatActivity implements
         ConnectionCallbacks, OnConnectionFailedListener {
     private static final String TAG = "EditEntryActivity"; //tag for logging
     //tags to indicate if imageView is icon or image
-    private static final int ICON_VIEW = 10;
-    private static final int IMAGE_VIEW = 20;
-    private Toolbar mToolbar;
+    private static final int ICON_VIEW = 101;
+    private static final int IMAGE_VIEW = 202;
     private EditText mNameView, mCoordView, mNoteView, mAddressView;
     private ImageView mImageView;
     private Location mLocation;
@@ -68,8 +70,14 @@ public class EditEntryActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         buildGoogleApiClient();
         setContentView(R.layout.activity_edit_entry);
-        mToolbar = (Toolbar) findViewById(R.id.tool_bar);
-        setSupportActionBar(mToolbar);
+        Toolbar toolbar= (Toolbar) findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar !=  null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+
         mNameView = (EditText) findViewById(R.id.name_input);
         mCoordView = (EditText) findViewById(R.id.coords_input);
         mNoteView = (EditText) findViewById(R.id.note_input);
@@ -133,24 +141,54 @@ public class EditEntryActivity extends AppCompatActivity implements
                     mAddressView.setText(cursor.getString(LocationDBHandler.ADDRESS));
                     mNoteView.setText(cursor.getString(LocationDBHandler.NOTE));
                     mThumbnailImagePath = cursor.getString(LocationDBHandler.IMAGE);
+
+
                     if (mThumbnailImagePath != null) {
-                        mImageView.setImageURI(Uri.parse(mThumbnailImagePath));
-                    } else {
-                        mImageView.setImageURI(null);
+                        Uri imageUri = Uri.parse(mThumbnailImagePath);
+                        File imageFile = new File(mThumbnailImagePath);
+                        if (imageFile.exists()) {
+                            mImageView.setImageURI(imageUri);
+                            mImageView.setTag(IMAGE_VIEW);
+                            return;
+                        }
+
+                        /*int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
+                        String fullSizeImageName = "";
+                        if (suffixIndex > 0) {
+                            fullSizeImageName = mThumbnailImagePath.substring(0, suffixIndex)
+                                    + mThumbnailImagePath.substring(suffixIndex+3);
+                        }
+                        //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
+                        Uri imageUri = Uri.parse(fullSizeImageName);
+                        File imageFile = new File(fullSizeImageName);
+                        if (imageFile.exists()) {
+                            mImageView.setImageURI(imageUri);
+                        }
+                        else {
+                            imageUri = Uri.parse(mThumbnailImagePath);
+                            imageFile = new File(fullSizeImageName);
+                            if (imageFile.exists()) {
+                                mImageView.setImageURI(imageUri);
+                            }
+                        }*/
+
+
                     }
-                    mImageView.setTag(IMAGE_VIEW);
+                        mImageView.setImageResource(R.drawable.icon_image);
+                        mImageView.setTag(ICON_VIEW);
                 }
             }
             ViewGroup.LayoutParams params = mImageView.getLayoutParams();
+            final float scale = getResources().getDisplayMetrics().density;
             switch ((int) mImageView.getTag()) {
                 case ICON_VIEW:
-                    params.width = 200;
-                    params.height = 200;
+                    params.width = params.height = (int) (80 * scale);
                     break;
                 case IMAGE_VIEW:
                     params.width = ViewGroup.LayoutParams.MATCH_PARENT;
                     params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                    mImageView.setMaxHeight(600);
+                    mImageView.setMaxWidth((int) (430 * scale));
+                    mImageView.setMaxHeight((int) (240 * scale));
                     break;
             }
             intent.removeExtra(Constants.SOURCE);
@@ -177,6 +215,31 @@ public class EditEntryActivity extends AppCompatActivity implements
             instanceState.putString(Constants.THUMBNAIL_IMAGE_URI, mThumbnailImagePath);
         }
         super.onSaveInstanceState(instanceState);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_editentry, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+            case android.R.id.home:
+                saveLocation();
+                break;
+            case R.id.cancel:
+                cancelActivity();
+                break;
+            case R.id.get_address:
+                setLocationFromEdiText();
+                getAddress();
+                break;
+        }
+
+        return super.onOptionsItemSelected(menuItem);
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -226,10 +289,8 @@ public class EditEntryActivity extends AppCompatActivity implements
             Toast.makeText(this, R.string.no_geocoder_available, Toast.LENGTH_LONG).show();
             return;
         }
-        Intent intent = new Intent(this, FetchAddressService.class);
-        intent.putExtra(Constants.BUNDLE_LOCATION, mLocation);
-        intent.putExtra(Constants.RECEIVER, mResultReceiver);
-        startService(intent);
+
+        getAddress();
     }
 
     @Override
@@ -242,14 +303,42 @@ public class EditEntryActivity extends AppCompatActivity implements
 
     }
 
-    public void cancelActivity(View v) {
+    //get text representation of address in mLocation
+    private void getAddress() {
+        Intent intent = new Intent(this, FetchAddressService.class);
+        intent.putExtra(Constants.BUNDLE_LOCATION, mLocation);
+        intent.putExtra(Constants.RECEIVER, mResultReceiver);
+        startService(intent);
+    }
+
+    //sets mLocation from the EditText field of Coords
+    private void setLocationFromEdiText() {
+        String[] coords = mCoordView.getText().toString().split(",");
+        if (coords.length == 2) {
+            Location location = null;
+            try {
+                double latitude = Double.valueOf(coords[0].trim());
+                double longitude = Double.valueOf(coords[1].trim());
+                location = new Location("FromEdiText");
+                location.setLatitude(latitude);
+                location.setLongitude(longitude);
+            }
+            catch (NumberFormatException e) {
+                Toast.makeText(this, R.string.incorrect_coords, Toast.LENGTH_SHORT).show();
+            }
+            if (location != null)
+                mLocation = location;
+        }
+    }
+
+    private void cancelActivity() {
         if (mDeleteImageFlag) {
             deleteImages();
         }
         this.finish();
     }
 
-    public void saveLocation(View v) {
+    private void saveLocation() {
         //if the activity is launched through clicking an entry in ListFragment, rowId will be set
         if (mRowId == -1) {
             CharSequence nameText = mNameView.getText();
@@ -323,7 +412,7 @@ public class EditEntryActivity extends AppCompatActivity implements
         }
     }
 
-    class makeThumbnailTask extends AsyncTask<String, Void, Bitmap> {
+    class makeThumbnailTask extends AsyncTask<String, Void, String> {
         private final WeakReference<ImageView> imageViewReference;
 
         public makeThumbnailTask(ImageView imageView) {
@@ -332,7 +421,7 @@ public class EditEntryActivity extends AppCompatActivity implements
         }
 
         @Override
-        protected Bitmap doInBackground(String... params) {
+        protected String doInBackground(String... params) {
             String imagePath = params[0];
             Bitmap originalBitmap = null;
             try {
@@ -354,7 +443,8 @@ public class EditEntryActivity extends AppCompatActivity implements
                 Log.d("EditEntryActivity", "Failure getting Bitmap from " + imagePath);
                 return null;
             }
-            final int maxSize = getResources().getInteger(R.integer.thumbnail_size_pixel);
+
+            final int maxSize = 1920;
             int outWidth;
             int outHeight;
             int inWidth = originalBitmap.getWidth();
@@ -366,19 +456,12 @@ public class EditEntryActivity extends AppCompatActivity implements
                 outHeight = maxSize;
                 outWidth = (inWidth * maxSize) / inHeight;
             }
+
+            //resizes image to max dimension 1920 and overwrites original file
             Bitmap resized = Bitmap.createScaledBitmap(originalBitmap, outWidth, outHeight, false);
-            int dotIndex = imagePath.lastIndexOf(".");
-            String baseImageName;
-            if (dotIndex > 0) {
-                baseImageName = imagePath.substring(0, dotIndex);
-            } else {
-                Log.d("makeThumbnailTask", "Error extracting base image name");
-                return null;
-            }
-            mThumbnailImagePath = baseImageName + "_tn.jpg";
-            File thumbnailImageFile = new File(mThumbnailImagePath);
+            File imageFile = new File(imagePath);
             try {
-                FileOutputStream fos = new FileOutputStream(thumbnailImageFile);
+                FileOutputStream fos = new FileOutputStream(imageFile);
                 resized.compress(Bitmap.CompressFormat.JPEG, 90, fos);
                 fos.close();
             } catch (FileNotFoundException e) {
@@ -386,27 +469,51 @@ public class EditEntryActivity extends AppCompatActivity implements
             } catch (IOException e) {
                 Log.d("makeThumbnailTask", "Error accessing file: " + e.getMessage());
             }
-            return resized;
+            //resizes image to
+            resized = Bitmap.createScaledBitmap(originalBitmap, (int) (outWidth/4), (int) (outHeight/4), false);
+            int dotIndex = imagePath.lastIndexOf(".");
+            String baseImageName;
+            if (dotIndex > 0) {
+                baseImageName = imagePath.substring(0, dotIndex);
+            }
+            else {
+                Log.d("makeThumbnailTask", "Error extracting base image name");
+                return null;
+            }
+            mThumbnailImagePath = baseImageName + "_tn.jpg";
+            imageFile = new File(mThumbnailImagePath);
+            try {
+                FileOutputStream fos = new FileOutputStream(imageFile);
+                resized.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                fos.close();
+            } catch (FileNotFoundException e) {
+                Log.d("makeThumbnailTask", "File not found: " + e.getMessage());
+            } catch (IOException e) {
+                Log.d("makeThumbnailTask", "Error accessing file: " + e.getMessage());
+            }
+            return imagePath;
         }
 
         // Once complete, see if ImageView is still around and set bitmap.
         @Override
-        protected void onPostExecute(Bitmap bitmap) {
+        protected void onPostExecute(String imagePath) {
             ImageView imageView = imageViewReference.get();
             if (imageView == null) {
                 return;
             }
-            if (bitmap == null) {
+            if (imagePath == null || imagePath.isEmpty()) {
                 //deleteImages();
                 imageView.setImageResource(R.drawable.icon_camera);
                 imageView.setOnClickListener(mImageClickListener);
                 return;
             }
-            imageView.setImageBitmap(bitmap);
+            imageView.setImageURI(Uri.parse(imagePath));
             ViewGroup.LayoutParams params = mImageView.getLayoutParams();
             params.width = ViewGroup.LayoutParams.MATCH_PARENT;
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-            mImageView.setMaxHeight(600);
+            final float scale = getResources().getDisplayMetrics().density;
+            mImageView.setMaxWidth((int) (430 * scale));
+            mImageView.setMaxHeight((int) (240 * scale));
             mImageView.setTag(IMAGE_VIEW);
         }
     }

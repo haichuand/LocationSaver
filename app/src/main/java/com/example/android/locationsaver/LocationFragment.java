@@ -36,7 +36,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class LocationFragment extends Fragment implements LocationListener, ConnectionCallbacks,
     OnConnectionFailedListener {
     //location update interval in milliseconds
-    private final int UPDATE_INTERVAL=5000;
+    private final int UPDATE_INTERVAL=3000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
     //default zooms to street level
     private final float DEFAULT_MAP_ZOOM=18;
