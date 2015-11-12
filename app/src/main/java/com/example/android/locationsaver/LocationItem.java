@@ -10,14 +10,16 @@ public class LocationItem {
     public String address;
     public String note;
     public String imagePath;
+    public long time;
 
     public LocationItem (String name, double latitude, double longitude,
-                         String address, String note, String imagePath) {
+                         String address, String note, String imagePath, long time) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
         this.address = address;
         this.imagePath = imagePath;
         this.note = note;
+        this.time = time;
     }
 }

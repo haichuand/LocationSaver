@@ -24,6 +24,7 @@ public class LocationDBHandler extends SQLiteOpenHelper {
     public static final int ADDRESS = 4;
     public static final int NOTE = 5;
     public static final int IMAGE = 6;
+    public static final long TIME = 7;
 
     public LocationDBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -35,7 +36,8 @@ public class LocationDBHandler extends SQLiteOpenHelper {
                 LocationEntry._ID + " INTEGER PRIMARY KEY, " + LocationEntry.COLUMN_NAME +
                 " TEXT UNIQUE NOT NULL, " + LocationEntry.COLUMN_LATITUDE + " REAL NOT NULL, " +
                 LocationEntry.COLUMN_LONGITUDE + " REAL NOT NULL, " + LocationEntry.COLUMN_ADDRESS
-                + " TEXT, " + LocationEntry.COLUMN_NOTE + " TEXT, " + LocationEntry.COLUMN_IMAGE + " TEXT);";
+                + " TEXT, " + LocationEntry.COLUMN_NOTE + " TEXT, " + LocationEntry.COLUMN_IMAGE + " TEXT, "
+                + LocationEntry.COLUMN_TIME + " INTEGER NOT NULL);";
         sqLiteDatabase.execSQL(SQL_CREATE_TABLE);
     }
 
@@ -55,6 +57,8 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         values.put(LocationEntry.COLUMN_ADDRESS, location.address);
         values.put(LocationEntry.COLUMN_NOTE, location.note);
         values.put(LocationEntry.COLUMN_IMAGE, location.imagePath);
+        values.put(LocationEntry.COLUMN_TIME, location.time);
+
         rowId = db.insert(LocationEntry.TABLE, null, values);
         db.close();
         return rowId;
@@ -72,6 +76,7 @@ public class LocationDBHandler extends SQLiteOpenHelper {
             values.put(LocationEntry.COLUMN_ADDRESS, location.address);
             values.put(LocationEntry.COLUMN_NOTE, location.note);
             values.put(LocationEntry.COLUMN_IMAGE, location.imagePath);
+            values.put(LocationEntry.COLUMN_TIME, location.time);
             if (db.insert(LocationEntry.TABLE, null, values)==-1) {
                 break;
             }
@@ -90,24 +95,18 @@ public class LocationDBHandler extends SQLiteOpenHelper {
 
 
     public void insertTestRows() {
-        LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8;
+        LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8, loc9, loc10;
         String sdPath = Constants.IMAGE_DIRECTORY;
-        loc1 = new LocationItem("Seattle Waterfront", 46.315134, -119.39579,
-                "Alaskan Way & Pike St, Seattle, WA 98001, USA", "The most beautiful waterfront!", sdPath+"1.jpg");
-        loc2 = new LocationItem("2015-09-07_113247", 36.159431, -121.672289,
-                "McWay Waterfall Trail, Big Sur, CA 93920", "Incredible view", sdPath+"2.jpg");
-        loc3 = new LocationItem("GGB", 37.791693, -122.484574,
-                "Presidio, San Francisco, CA", "Golden Gate Bridge", sdPath+"3.jpg");
-        loc4 = new LocationItem("Test Location", -37.45251, 17.6051341,
-                "Daerah Khusus Ibukota Jakarta 10210, Indonesia", "", sdPath+"4.jpg");
-        loc5 = new LocationItem("NiceView Australia", -34.331451, 145.723574,
-                "Warrawidgee NSW 2680 Australia", "Somewhere in Australia", sdPath+"5.jpg");
-        loc6 = new LocationItem("Mt. Rainier", 37.368146, -122.029694,
-                "Mt. Rainier National Park, WA, USA", "Best hiking destination", sdPath+"6.jpg");
-        loc7 = new LocationItem("Tokyo Downtown", 35.680679, 139.738279,
-                "1-1 Kiyosu-bashi Dori, Chiyoda-ku, Tokyo, Japan", "", sdPath+"7.jpg");
-        loc8 = new LocationItem("Doctor's Office", 36.104361, -112.111494,
-                "Coconino County, AZ", "", sdPath+"8.jpg");
+        loc1 = new LocationItem("Seattle Waterfront", 47.607795, -122.342424, "Alaskan Way & Pike St, Seattle, WA 98001, USA", "The most beautiful waterfront!", sdPath+"1_tn.jpg", 1407004217000L);
+        loc2 = new LocationItem("2015-09-07_113247", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful watefall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
+        loc3 = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "Presidio, San Francisco, CA", "Beach by Golden Gate Bridge", sdPath+"3_tn.jpg", 1422469635000L);
+        loc4 = new LocationItem("Yosemite Falls", 37.747565, -119.596386, "", "Iconic falls in Yosemite Valley", sdPath+"4_tn.jpg", 1432486111000L);
+        loc5 = new LocationItem("Delicate Arch", 38.743650, -109.499252, "", "Beautiful sandstone arch in the high desert of Utah", sdPath+"5_tn.jpg", 1372964485000L);
+        loc6 = new LocationItem("Mt. Rainier", 46.787869, -121.736205, "", "On Skyline trail in Paradise area", sdPath+"6_tn.jpg", 1374775429000L);
+        loc7 = new LocationItem("Hana, Maui", 20.788188, -156.003554, "", "Black sand beach state park", sdPath+"7_tn.jpg", 1419989741000L);
+        loc8 = new LocationItem("Lake Tahoe", 38.968932, -120.089656, "", "On Rubicon trail", sdPath+"8_tn.jpg", 1436204124000L);
+        loc9 = new LocationItem("Nov 7, 2015 5:03:56PM", 37.5879333, -122.3307983, "", "Trail near Cyote Point", sdPath+"2015_11_07_17_03_58_tn.jpg", 1446944636000L);
+        loc10 = new LocationItem("Townhouse", 37.5589108, -122.2631193, "", "Accuracy: 21 feet", sdPath+"2015_11_11_16_36_26_tn.jpg", 1447202737000L);
         List<LocationItem> list = new ArrayList<LocationItem>();
         list.add(loc1);
         list.add(loc2);
@@ -117,6 +116,8 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         list.add(loc6);
         list.add(loc7);
         list.add(loc8);
+        list.add(loc9);
+        list.add(loc10);
         insertLocations(list);
     }
 
@@ -129,5 +130,6 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         public static final String COLUMN_ADDRESS = "address";
         public static final String COLUMN_NOTE = "note";
         public static final String COLUMN_IMAGE = "image";
+        public static final String COLUMN_TIME = "time";
     }
 }

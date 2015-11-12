@@ -13,9 +13,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.io.File;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.File;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback {
     private String TAG = "MainActivity";
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -135,6 +138,14 @@ public class MainActivity extends AppCompatActivity {
         return getFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
     }
 
+    @Override
+    public void showMarkersOnMap(List<MarkerOptions> markers) {
+        if (mViewPager ==  null) return;
+        mViewPager.setCurrentItem(0);
+        LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
+        locationFragment.showMarkers(markers);
+    }
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -191,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
         public int getPageIconResId(int position) {
             return iconRes[position];
         }
+
     }
 
     public void makeImageDirectory() {

@@ -95,6 +95,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="7" />
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -124,19 +125,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_margin="16dp"
+                    android:layout_marginTop="8dp"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
+                <!--<LinearLayout-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_marginTop="16dp">-->
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
+                    <!--<TextView-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1" />-->
 
                     <!--<Button-->
                     <!--android:id="@+id/button_save"-->
@@ -146,10 +147,10 @@
                     <!--android:onClick="saveLocation"-->
                     <!--android:text="@string/edit_entry_save_button" />-->
 
-                    <TextView
-                        android:layout_width="1dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
+                    <!--<TextView-->
+                        <!--android:layout_width="1dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1" />-->
 
                     <!--<Button-->
                     <!--android:id="@+id/button_cancel"-->
@@ -159,11 +160,11 @@
                     <!--android:onClick="cancelActivity"-->
                     <!--android:text="@string/edit_entry_cancel_button" />-->
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
-                </LinearLayout>
+                    <!--<TextView-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1" />-->
+                <!--</LinearLayout>-->
             </LinearLayout>
         </LinearLayout>
 

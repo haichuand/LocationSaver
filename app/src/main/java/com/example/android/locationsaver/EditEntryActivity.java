@@ -61,6 +61,7 @@ public class EditEntryActivity extends AppCompatActivity implements
     //image file saved from camera app
     private String mSaveImagePath, mThumbnailImagePath;
     private double mLongitude, mLatitude;
+    private Handler mHandler;
 
     private LocationDBHandler mDbHandler;
     long mRowId = -1;
@@ -84,13 +85,15 @@ public class EditEntryActivity extends AppCompatActivity implements
         mAddressView = (EditText) findViewById(R.id.address_input);
         mImageView = (ImageView) findViewById(R.id.entry_image);
         //make the name field select all on click for easier editing
-        mResultReceiver = new AddressResultReceiver(new Handler());
+        mHandler = new Handler();
+        mResultReceiver = new AddressResultReceiver(mHandler);
         mImageClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startCameraForImage();
             }
         };
+
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
     }
@@ -144,40 +147,48 @@ public class EditEntryActivity extends AppCompatActivity implements
 
 
                     if (mThumbnailImagePath != null) {
-                        Uri imageUri = Uri.parse(mThumbnailImagePath);
-                        File imageFile = new File(mThumbnailImagePath);
+
+
+//                        Uri imageUri = Uri.parse(mThumbnailImagePath);
+//                        File imageFile = new File(mThumbnailImagePath);
+//                        if (imageFile.exists()) {
+//                            mImageView.setImageURI(imageUri);
+//                            mImageView.setTag(IMAGE_VIEW);
+//                            return;
+//                        }
+
+
+                        //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
+                        int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
+                        String fullSizeImagePath = "";
+                        if (suffixIndex > 0) {
+                            fullSizeImagePath = mThumbnailImagePath.substring(0, suffixIndex)
+                                    + mThumbnailImagePath.substring(suffixIndex+3);
+                        }
+
+                        Uri imageUri;
+                        File imageFile = new File(fullSizeImagePath);
                         if (imageFile.exists()) {
+                            imageUri = Uri.parse(fullSizeImagePath);
                             mImageView.setImageURI(imageUri);
                             mImageView.setTag(IMAGE_VIEW);
                             return;
                         }
-
-                        /*int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
-                        String fullSizeImageName = "";
-                        if (suffixIndex > 0) {
-                            fullSizeImageName = mThumbnailImagePath.substring(0, suffixIndex)
-                                    + mThumbnailImagePath.substring(suffixIndex+3);
-                        }
-                        //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
-                        Uri imageUri = Uri.parse(fullSizeImageName);
-                        File imageFile = new File(fullSizeImageName);
-                        if (imageFile.exists()) {
-                            mImageView.setImageURI(imageUri);
-                        }
                         else {
-                            imageUri = Uri.parse(mThumbnailImagePath);
-                            imageFile = new File(fullSizeImageName);
+                            imageFile = new File(mThumbnailImagePath);
                             if (imageFile.exists()) {
+                                imageUri = Uri.parse(mThumbnailImagePath);
                                 mImageView.setImageURI(imageUri);
+                                mImageView.setTag(IMAGE_VIEW);
+                                return;
                             }
-                        }*/
-
-
+                        }
                     }
-                        mImageView.setImageResource(R.drawable.icon_image);
-                        mImageView.setTag(ICON_VIEW);
+                    mImageView.setImageResource(R.drawable.icon_image);
+                    mImageView.setTag(ICON_VIEW);
                 }
             }
+
             ViewGroup.LayoutParams params = mImageView.getLayoutParams();
             final float scale = getResources().getDisplayMetrics().density;
             switch ((int) mImageView.getTag()) {
@@ -346,7 +357,7 @@ public class EditEntryActivity extends AppCompatActivity implements
                 nameText = mNameView.getHint();
             }
             mDbHandler.insertLocation(new LocationItem(nameText.toString(), mLatitude, mLongitude,
-                    mAddressView.getText().toString(), mNoteView.getText().toString(), mThumbnailImagePath));
+                    mAddressView.getText().toString(), mNoteView.getText().toString(), mThumbnailImagePath, System.currentTimeMillis()));
         } else {
             ContentValues values = new ContentValues();
             if (mNameView.getText().length() == 0) {
@@ -408,6 +419,12 @@ public class EditEntryActivity extends AppCompatActivity implements
             if (resultCode == Constants.SUCCESS_RESULT) {
                 String addressText = resultData.getString(Constants.RESULT_DATA_KEY);
                 mAddressView.setText(addressText);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(EditEntryActivity.this, getString(R.string.address_received), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         }
     }
@@ -422,33 +439,38 @@ public class EditEntryActivity extends AppCompatActivity implements
 
         @Override
         protected String doInBackground(String... params) {
+            final int maxSize = 1920;
             String imagePath = params[0];
             Bitmap originalBitmap = null;
+            Bitmap orientedBitmap = null;
             try {
-                originalBitmap = BitmapFactory.decodeFile(imagePath);
-            } catch (OutOfMemoryError e) {
                 BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inSampleSize = 2;
-                try {
-                    originalBitmap = BitmapFactory.decodeFile(imagePath, options);
-                } catch (OutOfMemoryError error) {
-                    options.inSampleSize = 2;
-                    originalBitmap = BitmapFactory.decodeFile(imagePath, options);
-                }
-            } catch (Exception e) {
+                options.inJustDecodeBounds = true;
+
+                //Returns null, sizes are in the options variable
+                BitmapFactory.decodeFile(imagePath, options);
+                double maxDim = (options.outWidth>options.outHeight ? options.outWidth : options.outHeight);
+                int inSampleSize;
+                for (inSampleSize=1; maxDim/inSampleSize/maxSize >= 2.0; inSampleSize *= 2);
+
+                options.inSampleSize = inSampleSize;
+                options.inJustDecodeBounds = false;
+                originalBitmap = BitmapFactory.decodeFile(imagePath, options);
+                orientedBitmap = ImageUtils.rotateBitmap(imagePath, originalBitmap);
+            }  catch (Exception e) {
                 Log.d("EditEntryActivity", "Error decoding bitmap " + imagePath);
             }
 
-            if (originalBitmap == null) {
+            if (orientedBitmap == null) {
                 Log.d("EditEntryActivity", "Failure getting Bitmap from " + imagePath);
                 return null;
             }
 
-            final int maxSize = 1920;
+
             int outWidth;
             int outHeight;
-            int inWidth = originalBitmap.getWidth();
-            int inHeight = originalBitmap.getHeight();
+            int inWidth = orientedBitmap.getWidth();
+            int inHeight = orientedBitmap.getHeight();
             if (inWidth > inHeight) {
                 outWidth = maxSize;
                 outHeight = (inHeight * maxSize) / inWidth;
@@ -458,7 +480,7 @@ public class EditEntryActivity extends AppCompatActivity implements
             }
 
             //resizes image to max dimension 1920 and overwrites original file
-            Bitmap resized = Bitmap.createScaledBitmap(originalBitmap, outWidth, outHeight, false);
+            Bitmap resized = Bitmap.createScaledBitmap(orientedBitmap, outWidth, outHeight, false);
             File imageFile = new File(imagePath);
             try {
                 FileOutputStream fos = new FileOutputStream(imageFile);
@@ -469,8 +491,9 @@ public class EditEntryActivity extends AppCompatActivity implements
             } catch (IOException e) {
                 Log.d("makeThumbnailTask", "Error accessing file: " + e.getMessage());
             }
-            //resizes image to
-            resized = Bitmap.createScaledBitmap(originalBitmap, (int) (outWidth/4), (int) (outHeight/4), false);
+
+            //resizes image to max dimension 480 for show in ListFragment
+            Bitmap thumbnailBitmap = Bitmap.createScaledBitmap(resized, (int) (outWidth/4), (int) (outHeight/4), false);
             int dotIndex = imagePath.lastIndexOf(".");
             String baseImageName;
             if (dotIndex > 0) {
@@ -484,7 +507,7 @@ public class EditEntryActivity extends AppCompatActivity implements
             imageFile = new File(mThumbnailImagePath);
             try {
                 FileOutputStream fos = new FileOutputStream(imageFile);
-                resized.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
                 fos.close();
             } catch (FileNotFoundException e) {
                 Log.d("makeThumbnailTask", "File not found: " + e.getMessage());
@@ -517,5 +540,7 @@ public class EditEntryActivity extends AppCompatActivity implements
             mImageView.setTag(IMAGE_VIEW);
         }
     }
+
+
 
 }

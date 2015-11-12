@@ -21,7 +21,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener {
 
@@ -31,13 +36,15 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     LocationDBHandler mDbHandler;
     private ActionMode mActionMode;
 
-
+    public interface ListFragmentCallback {
+        void showMarkersOnMap (List<MarkerOptions> markers);
+    }
 
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater menuInflater = mode.getMenuInflater();
-            menuInflater.inflate(R.menu.context_menu, menu);
+            menuInflater.inflate(R.menu.context_menu_listfragment, menu);
             return true;
         }
 
@@ -50,47 +57,22 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int id = item.getItemId();
 
-            if (id == R.id.action_edit) {
-                editLocationItem();
-            } else if (id == R.id.action_delete) {
-                int itemsSelected = mAdapter.mSelectedItemList.size();
-                if (itemsSelected > 0) {
-                    String message;
-                    if (itemsSelected == 1) {
-                        message = getString(R.string.delete_item_message_1) + " " + itemsSelected
-                                + " " + getString(R.string.delete_item_message_2);
-                    } else {
-                        message = getString(R.string.delete_items_message_1) + " " + itemsSelected
-                                + " " + getString(R.string.delete_items_message_2);
-                    }
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                            .setTitle(R.string.delete_items_alert).setMessage(message)
-                            .setIcon(android.R.drawable.ic_dialog_alert);
-                    AlertDialog dlg = builder.create();
-                    dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.ok),
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    deleteLocationItems();
-                                }
-                            });
-
-                    dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel),
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                }
-                            });
-
-        /*
-         * Show the modal dialog. Once the user has clicked on a button, the
-         * dialog is automatically removed.
-         */
-                    dlg.show();
-                }
-
+            switch (id) {
+                case R.id.action_edit:
+                    editLocationItem();
+                    break;
+                case R.id.action_delete:
+                    promptToDeleteLocationItems();
+                    break;
+                case R.id.action_show_location:
+                    showLocationsOnMap();
+                    if (mActionMode != null)
+                        mActionMode.finish();
+                    break;
+                default:
+                    assert false;
             }
+
             return true;
         }
 
@@ -117,6 +99,10 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 //        db.close();
 //        mDbHandler.insertTestRows();
         mCursor = mDbHandler.selectAllRows();
+        if (!mCursor.moveToFirst()) {
+            mDbHandler.insertTestRows();
+            mCursor = mDbHandler.selectAllRows();
+        }
         setHasOptionsMenu(true);
     }
 
@@ -152,16 +138,70 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         }
     }
 
+    private void promptToDeleteLocationItems() {
+        int itemsSelected = mAdapter.mSelectedItemList.size();
+        if (itemsSelected > 0) {
+            String message;
+            if (itemsSelected == 1) {
+                message = getString(R.string.delete_item_message_1) + " " + itemsSelected
+                        + " " + getString(R.string.delete_item_message_2);
+            } else {
+                message = getString(R.string.delete_items_message_1) + " " + itemsSelected
+                        + " " + getString(R.string.delete_items_message_2);
+            }
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.delete_items_alert).setMessage(message)
+                    .setIcon(android.R.drawable.ic_dialog_alert);
+            AlertDialog dlg = builder.create();
+            dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.ok),
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            deleteLocationItems();
+                        }
+                    });
+
+            dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.cancel),
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+
+        /*
+         * Show the modal dialog. Once the user has clicked on a button, the
+         * dialog is automatically removed.
+         */
+            dlg.show();
+        }
+    }
+
+    private void showLocationsOnMap() {
+        ArrayList<MarkerOptions> markerList= new ArrayList<>();
+        for (int selectedItem : mAdapter.mSelectedItemList) {
+            mCursor.moveToPosition(selectedItem);
+            MarkerOptions newMarker = new MarkerOptions()
+                    .position(new LatLng(mCursor.getDouble(LocationDBHandler.LATITUDE), mCursor.getDouble(LocationDBHandler.LONGITUDE)))
+                    .title(mCursor.getString(LocationDBHandler.NAME))
+                    .snippet(mCursor.getString(LocationDBHandler.NOTE));
+            markerList.add(newMarker);
+        }
+        MainActivity mainActivity = (MainActivity) getActivity();
+        mainActivity.showMarkersOnMap(markerList);
+    }
+
     private void deleteLocationItems() {
         SQLiteDatabase db = mDbHandler.getWritableDatabase();
         long rowId;
+
         for (Iterator<Integer> it = mAdapter.mSelectedItemList.iterator(); it.hasNext(); ) {
             mCursor.moveToPosition(it.next());
             rowId = mCursor.getLong(LocationDBHandler._ID);
             db.delete(LocationDBHandler.LocationEntry.TABLE,
                     LocationDBHandler.LocationEntry._ID + "=" + rowId, null);
         }
-//        mAdapter.mSelectedRowList.clear();
+
         mAdapter.mSelectedItemList.clear();
         onListItemChanged();
         if(mActionMode != null) {
