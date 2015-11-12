@@ -52,3 +52,10 @@ Weekly Activity Log<br>
 ● Removed "Save" and "Cancel" buttons in EditEntryActivity and replaced with Toolbar icons to perform action<br>
 ● Added getAddress menu icon in EditEntryActivity to fill address field through FetchAddressService<br>
 ● Plan for next week: add "show locations on map" functionality and start implementing sorting functionality in ListFragment<br>
+
+11/12/2015<br>
+● Added "show locations on map" icon to context menu in ListFragment to show selected location items as markers on map through callback interface to MainActivity<br>
+● MainActivity propages back to LocationFragment and calculates the correct map bounds to show all selected location items<br>
+● When showing markers, LocationFragment also enters context menu through ActionMode to let users clear markers<br>
+● Updated database; added time column (UTC milliseconds) to location itmes for implementing sorting through time in the future<br>
+● Plan for next week: start implementing the sort/search location list functionality<br>
