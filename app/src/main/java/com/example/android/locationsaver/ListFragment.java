@@ -1,7 +1,6 @@
 package com.example.android.locationsaver;
 
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,6 +8,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,18 +29,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener {
+public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener, ViewPager.OnPageChangeListener {
 
+    LocationDBHandler mDbHandler;
     private LocationListAdapter mAdapter;
     private Cursor mCursor;
     private Context mContext;
-    LocationDBHandler mDbHandler;
     private ActionMode mActionMode;
-
-    public interface ListFragmentCallback {
-        void showMarkersOnMap (List<MarkerOptions> markers);
-    }
-
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -79,13 +75,29 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             mAdapter.mSelectedItemList.clear();
-            mActionMode = null;
+            mAdapter.isMultiSelect = false;
             mAdapter.notifyDataSetChanged();
+            mActionMode = null;
         }
     };
 
     public ListFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
     }
 
     @Override
@@ -120,7 +132,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         return v;
     }
 
-
     private void editLocationItem() {
         int numSelected = mAdapter.mSelectedItemList.size();
         if (numSelected != 1) {
@@ -130,7 +141,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
             intent.putExtra(Constants.SOURCE, Constants.LIST_FRAGMENT);
             mCursor.moveToPosition(mAdapter.mSelectedItemList.get(0));
             intent.putExtra(Constants.BUNDLE_DB_ROWID, mCursor.getLong(LocationDBHandler._ID));
-            startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
+            getActivity().startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
             mAdapter.mSelectedItemList.clear();
         }
         if (mActionMode != null) {
@@ -209,7 +220,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         }
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
@@ -218,12 +228,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     @Override
     public void onPause() {
         super.onPause();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        MainActivity mainActivity = (MainActivity) getActivity();
-        mainActivity.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -262,6 +266,12 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
     }
 
+//    @Override
+//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        MainActivity mainActivity = (MainActivity) getActivity();
+//        mainActivity.onActivityResult(requestCode, resultCode, data);
+//    }
+
     public void onListItemChanged() {
         mCursor = mDbHandler.selectAllRows();
         mAdapter.changeCursor(mCursor);
@@ -280,6 +290,10 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         startActivity(intent);
         mAdapter.mSelectedItemList.clear();
 //        mAdapter.mSelectedRowList.clear();
+    }
+
+    public interface ListFragmentCallback {
+        void showMarkersOnMap(List<MarkerOptions> markers);
     }
 
 }

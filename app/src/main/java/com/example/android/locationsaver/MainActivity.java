@@ -1,43 +1,34 @@
 package com.example.android.locationsaver;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v13.app.FragmentPagerAdapter;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.File;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback {
-    private String TAG = "MainActivity";
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    SectionsPagerAdapter mSectionsPagerAdapter;
-
+public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback, ViewPager.OnPageChangeListener {
+    private static final float TAB_ALPHA_SELECTED = 1.0f;
+    private static final float TAB_ALPHA_UNSELECTED = 0.5f;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
     Toolbar mToolbar;
-    SlidingTabLayout mSlidingTabs;
-//    LocationFragment mLocationFragment;
-//    ListFragment mListFragment;
+    private String TAG = "MainActivity";
+    private TabLayout mTabLayout;
+    private TabPagerAdapter mTabPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,50 +43,17 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(this.getFragmentManager());
+        mTabLayout = (TabLayout) this.findViewById(R.id.tab_layout);
+        mTabPagerAdapter = new TabPagerAdapter(this.getSupportFragmentManager(), this);
+        mTabPagerAdapter.add(null, R.drawable.icon_map, new LocationFragment());
+        mTabPagerAdapter.add(null, R.drawable.icon_list, new ListFragment());
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        mViewPager.setAdapter(mTabPagerAdapter);
+        mViewPager.addOnPageChangeListener(this);
 
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                //stop location update when user switch out of LocationFragment
-                LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
-                if (position == 1)  {
-                    locationFragment.onPause();
-                }
-                else {
-                    locationFragment.onResume();
-                }
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
-
-        mSlidingTabs = (SlidingTabLayout) findViewById(R.id.tabs);
-        // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
-        mSlidingTabs.setDistributeEvenly(true);
-//        mSlidingTabs.setCustomTabView(R.layout.tab_view, R.id.tab_name_img);
-
-        // Setting Custom Color for the Scroll bar indicator of the Tab View
-        mSlidingTabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
-            @Override
-            public int getIndicatorColor(int position) {
-                return getResources().getColor(R.color.tabsScrollColor);
-            }
-        });
-
-        // Setting the ViewPager For the SlidingTabsLayout
-        mSlidingTabs.setViewPager(mViewPager);
+        setTabLayoutViewPager(mViewPager);
 
         new Thread(new Runnable() {
             @Override
@@ -128,90 +86,99 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("MainActivity", "onActivityResult() called");
         if (requestCode==Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode==RESULT_OK) {
-            mViewPager.setCurrentItem(1);
-            ListFragment listFragment = (ListFragment) findCurrentFragment(1);
+            mViewPager.setCurrentItem(Constants.LIST_FRAGMENT_POSITION);
+            ListFragment listFragment = (ListFragment) mTabPagerAdapter.getItem(Constants.LIST_FRAGMENT_POSITION);
             listFragment.onListItemChanged();
         }
     }
 
-    private Fragment findCurrentFragment(int position) {
-        return getFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
-    }
+//    private Fragment findCurrentFragment(int position) {
+//        return getFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
+//    }
 
     @Override
     public void showMarkersOnMap(List<MarkerOptions> markers) {
         if (mViewPager ==  null) return;
-        mViewPager.setCurrentItem(0);
-        LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
+        mViewPager.setCurrentItem(Constants.LOCATION_FRAGMENT_POSITION);
+        LocationFragment locationFragment = (LocationFragment) mTabPagerAdapter.getItem(Constants.LOCATION_FRAGMENT_POSITION);
         locationFragment.showMarkers(markers);
-    }
-
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter
-            implements SlidingTabLayout.TabIconProvider {
-
-        private final int iconRes[] = {
-                R.drawable.icon_location,
-                R.drawable.icon_list
-        };
-
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            if (position == 0) {
-                return new LocationFragment();
-//                if (mLocationFragment == null) {
-//                    mLocationFragment = new LocationFragment();
-//                }
-//                return mLocationFragment;
-            } else {
-                return new ListFragment();
-//                if (mListFragment == null) {
-//                    mListFragment = new ListFragment();
-//                }
-//                return mListFragment;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            // Show 2 total pages
-            return 2;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-//            Locale l = Locale.getDefault();
-            switch (position) {
-                case 0:
-                    return getString(R.string.title_location_tab);
-                case 1:
-                    return getString(R.string.title_list_tab);
-            }
-            return null;
-        }
-
-        @Override
-        public int getPageIconResId(int position) {
-            return iconRes[position];
-        }
-
     }
 
     public void makeImageDirectory() {
         String imageDirectory = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES).getPath()+"/LocationSaverImages";
+                Environment.DIRECTORY_PICTURES).getPath() + "/LocationSaverImages";
         File file = new File(imageDirectory);
         if (!file.exists()) {
             if (!file.mkdirs())
-                Log.d(TAG, "Error making directory "+file.getPath());
+                Log.d(TAG, "Error making directory " + file.getPath());
+        }
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        Fragment fragment = mTabPagerAdapter.getItem(position);
+        if (fragment instanceof TabPagerAdapter.TabPagerListener) {
+            ((TabPagerAdapter.TabPagerListener) fragment).onPageSelected();
+        }
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    public void setTabLayoutViewPager(final ViewPager viewPager) {
+        mTabLayout.setupWithViewPager(viewPager);
+        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            private int position;
+
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                View view = tab.getCustomView();
+                if (view != null) {
+                    view.setAlpha(TAB_ALPHA_SELECTED);
+                }
+
+                viewPager.setCurrentItem(tab.getPosition());
+                position = tab.getPosition();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                View view = tab.getCustomView();
+                if (view != null) {
+                    view.setAlpha(TAB_ALPHA_UNSELECTED);
+                }
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                if (tab.getPosition() == position) {
+                    TabPagerAdapter adapter = (TabPagerAdapter) viewPager.getAdapter();
+                    Fragment fragment = adapter.getItem(tab.getPosition());
+
+//                    if (fragment instanceof ScrollableInterface) {
+//                        ScrollableInterface scrollable = (ScrollableInterface) fragment;
+//                        scrollable.scrollToTop();
+//                    }
+                }
+            }
+        });
+
+        TabPagerAdapter adapter = (TabPagerAdapter) viewPager.getAdapter();
+        for (int i = 0; i < adapter.getCount(); i++) {
+            TabLayout.Tab tab = mTabLayout.getTabAt(i);
+
+            if (tab != null) {
+                View view = adapter.getTabView(i);
+                if (i > 0) view.setAlpha(TAB_ALPHA_UNSELECTED);
+                tab.setCustomView(view);
+            }
         }
     }
 

@@ -59,3 +59,11 @@ Weekly Activity Log<br>
 ● When showing markers, LocationFragment also enters context menu through ActionMode to let users clear markers<br>
 ● Updated database; added time column (UTC milliseconds) to location itmes for implementing sorting through time in the future<br>
 ● Plan for next week: start implementing the sort/search location list functionality<br>
+
+11/19/2015<br>
+● Created layout of widget, with two TextViews for displaying location name and address, and an add location ImageView as button to save current location<br>
+● Extended AppWidgetProvider class as the class to handle widget creation and updates<br>
+● Created LocationSaverService to handle background location saving for widget<br>
+● On pressing button in widget, it sends a PendingIntent to start LocationSaverService. Once the location is saved to database, LocationSaverService broadcast results to widget<br>
+● Also changed TabPagerAdapter in MainActivity to use icons instead of tab tiles and to show animation of tab changing<br>
+● Plan for next week: implement the LocationSaverService to get location, save location and update widget.

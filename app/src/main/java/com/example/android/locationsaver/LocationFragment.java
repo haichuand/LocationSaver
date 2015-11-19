@@ -1,11 +1,11 @@
 package com.example.android.locationsaver;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.util.Log;
@@ -27,7 +27,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 
 public class LocationFragment extends Fragment implements LocationListener, ConnectionCallbacks,
-    OnConnectionFailedListener {
+        OnConnectionFailedListener, TabPagerAdapter.TabPagerListener {
     //location update interval in milliseconds
     private final int UPDATE_INTERVAL=3000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
@@ -51,10 +51,10 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private Location mCurrentLocation;
-    private MapFragment mMapFragment;
+    private SupportMapFragment mMapFragment;
     private GoogleMap mMap;
     private boolean mMoveCameraToCurrentLocation;
-    private MainActivity mActivity;
+    //    private MainActivity mActivity;
     private TextView mAccuracyView;
     private int mAccuracy; //accuracy of current location
     private ActionMode mActionMode;
@@ -102,7 +102,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mActivity = (MainActivity) getActivity();
+//        mActivity = (MainActivity) getActivity();
         createLocationRequest();
         mMoveCameraToCurrentLocation = true;
     }
@@ -111,7 +111,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_location, container, false);
-        mMapFragment = (MapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        mMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mMap = mMapFragment.getMap();
         mMap.setMyLocationEnabled(true);
         mAccuracyView = (TextView) view.findViewById(R.id.text_accuracy);
@@ -133,16 +133,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onResume() {
         super.onResume();
-
-        if (mGoogleApiClient==null) {
-            buildGoogleApiClient();
-        }
-        if(!mGoogleApiClient.isConnected()){
-            mGoogleApiClient.connect();
-        }
-        else if (mActivity.mViewPager.getCurrentItem()==0) { //only when current fragment is being viewed
-            startLocationUpdates();
-        }
+        startLocationUpdates();
 //        mMoveCameraToCurrentLocation = true;
     }
 
@@ -163,10 +154,10 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         super.onStop();
     }
 
-    @Override
-    public void onActivityResult (int requestCode, int resultCode, Intent data) {
-        mActivity.onActivityResult(requestCode, resultCode, data);
-    }
+//    @Override
+//    public void onActivityResult (int requestCode, int resultCode, Intent data) {
+//        ((MainActivity) getActivity()).onActivityResult(requestCode, resultCode, data);
+//    }
 
     @Override
     public void onAttach(Context context) {
@@ -174,7 +165,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     }
 
     private synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(mActivity)
+        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -194,8 +185,15 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     protected void startLocationUpdates() {
         // The final argument to {@code requestLocationUpdates()} is a LocationListener
         // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
+        if (mGoogleApiClient == null) {
+            buildGoogleApiClient();
+        }
+        if (!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+        } else if (((MainActivity) getActivity()).mViewPager.getCurrentItem() == 0) { //only when current fragment is being viewed
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient, mLocationRequest, this);
+        }
     }
 
     /**
@@ -214,8 +212,6 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
     @Override
     public void onConnected(Bundle bundle) {
-        mActivity = (MainActivity) getActivity();
-        if (mActivity.mViewPager.getCurrentItem()==0)
             startLocationUpdates();
     }
 
@@ -255,10 +251,10 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
 
     public void saveCurrentLocation() {
-        Intent intent = new Intent(mActivity, EditEntryActivity.class);
+        Intent intent = new Intent(getContext(), EditEntryActivity.class);
         intent.putExtra(Constants.SOURCE, Constants.LOCATION_FRAGMENT);
         intent.putExtra(Constants.BUNDLE_LOCATION, mCurrentLocation);
-        startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
+        getActivity().startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
     }
 
 
@@ -293,6 +289,11 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
         mMap.animateCamera(cu);
         mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
+    }
+
+    @Override
+    public void onPageSelected() {
+        startLocationUpdates();
     }
 
 //    @Override

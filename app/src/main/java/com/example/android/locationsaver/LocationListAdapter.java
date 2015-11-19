@@ -19,15 +19,8 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
     //    ArrayList<Long> mSelectedRowList = new ArrayList<>();
     ArrayList<Integer> mSelectedItemList = new ArrayList<>();
     boolean isMultiSelect; //flag for whether in multi-selection state
-
-    interface LocationListListener {
-        void onListItemClicked(int clickSource);
-    }
-
     private LocationListListener mListener;
     private Cursor mCursor;
-
-
     public LocationListAdapter(Cursor cursor, LocationListListener listener) {
         mCursor = cursor;
         mListener = listener;
@@ -98,6 +91,10 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
         mCursor = newCursor;
     }
 
+    interface LocationListListener {
+        void onListItemClicked(int clickSource);
+    }
+
     //    private void changeOptionsMenu() {
 //        if (mSelectedRowList.isEmpty()) {
 //            menu.findItem(R.id.action_delete).setVisible(false);
@@ -117,7 +114,6 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
             public void onClick(View view) {
                 if (mSelectedItemList.size() == 0) {
                     mSelectedItemList.add(getAdapterPosition());
-//                    mSelectedRowList.add(mRowId);
                     mListener.onListItemClicked(Constants.CLICK_SOURCE_IMAGE);
                 } else {
                     mListener.onListItemClicked(Constants.CLICK_DESELECT);

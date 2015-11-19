@@ -10,6 +10,9 @@ public final class Constants {
 
     public static final int FAILURE_RESULT = 1;
 
+    public static final int LOCATION_FRAGMENT_POSITION = 0;
+    public static final int LIST_FRAGMENT_POSITION = 1;
+
     public static final String PACKAGE_NAME =
             "com.example.android.locationsaver";
 
@@ -24,7 +27,7 @@ public final class Constants {
 
     public static final String LIST_FRAGMENT = PACKAGE_NAME + ".ListFragment";
 
-    public static final String SOURCE = "SOURCE_FRAGMENT"; //tag to indicate source of intent
+    public static final String SOURCE = "SOURCE"; //tag to indicate source of intent
 
     public static final String IMAGE_DIRECTORY = Environment.
             getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -42,4 +45,7 @@ public final class Constants {
     public static final int CLICK_ENTER_MULTISELECT_MODE = 356;
     public static final int CLICK_EXIT_MULTISELECT_MODE = 683;
     public static final int CLICK_SELECTION_COUNT_CHANGED = 801;
+
+    public static final String LOCATION_SAVED_BROADCAST = PACKAGE_NAME + ".LOCATION_SAVED";
+    public static final String LOCATION_TEXT = "LOCATION_TEXT";
 }
