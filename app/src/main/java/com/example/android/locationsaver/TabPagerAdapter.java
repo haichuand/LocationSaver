@@ -15,22 +15,31 @@ import java.util.List;
 public class TabPagerAdapter extends FragmentPagerAdapter {
 
     private Context context;
+    private FragmentManager fragmentManager;
     private List<TabPagerItem> items = new ArrayList<>();
+    Fragment currentFragments[] = new Fragment[2];
 
     public TabPagerAdapter(FragmentManager manager, Context context) {
         super(manager);
+        fragmentManager = manager;
         this.context = context;
     }
 
     @Override
     public Fragment getItem(int position) {
-        TabPagerItem item = items.get(position);
-        return item.fragment;
+        switch (position) {
+            case 0:
+                return new LocationFragment();
+            case 1:
+                return new ListFragment();
+            default:
+                return null;
+        }
     }
 
     @Override
     public int getCount() {
-        return items.size();
+        return 2;
     }
 
     @Override
@@ -39,8 +48,8 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
         return item.title;
     }
 
-    public void add(String title, int icon, Fragment fragment) {
-        items.add(new TabPagerItem(title, icon, fragment));
+    public void add(String title, int icon) {
+        items.add(new TabPagerItem(title, icon));
     }
 
     public TabPagerItem getTabItem(int position) {

@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener, ViewPager.OnPageChangeListener {
+public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener {
 
     LocationDBHandler mDbHandler;
     private LocationListAdapter mAdapter;
@@ -83,21 +82,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
     public ListFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-    }
-
-    @Override
-    public void onPageSelected(int position) {
-
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-
     }
 
     @Override

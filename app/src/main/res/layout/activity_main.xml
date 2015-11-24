@@ -15,14 +15,14 @@
             android:id="@+id/tool_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/ColorPrimary"
+            android:background="@color/ColorPrimaryDark"
             android:theme="@style/Base.ThemeOverlay.AppCompat.Dark" />
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/ColorPrimary"
+            android:background="@color/ColorPrimaryDark"
             android:theme="@style/Base.ThemeOverlay.AppCompat.Dark"
             app:tabIndicatorColor="@android:color/white"
             app:tabIndicatorHeight="3dp" />

@@ -148,16 +148,6 @@ public class EditEntryActivity extends AppCompatActivity implements
 
                     if (mThumbnailImagePath != null) {
 
-
-//                        Uri imageUri = Uri.parse(mThumbnailImagePath);
-//                        File imageFile = new File(mThumbnailImagePath);
-//                        if (imageFile.exists()) {
-//                            mImageView.setImageURI(imageUri);
-//                            mImageView.setTag(IMAGE_VIEW);
-//                            return;
-//                        }
-
-
                         //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
                         int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
                         String fullSizeImagePath = "";

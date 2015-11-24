@@ -40,9 +40,9 @@ import java.util.List;
  */
 
 public class LocationFragment extends Fragment implements LocationListener, ConnectionCallbacks,
-        OnConnectionFailedListener, TabPagerAdapter.TabPagerListener {
+        OnConnectionFailedListener {
     //location update interval in milliseconds
-    private final int UPDATE_INTERVAL=3000;
+    private static final int UPDATE_INTERVAL=3000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
     //default zooms to street level
     private final float DEFAULT_MAP_ZOOM=18;
@@ -96,13 +96,12 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     };
 
     public LocationFragment() {
-        // Required empty public constructor
+        super();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        mActivity = (MainActivity) getActivity();
         createLocationRequest();
         mMoveCameraToCurrentLocation = true;
     }
@@ -162,14 +161,16 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
     }
 
     private synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
+            mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+
     }
 
     private void createLocationRequest() {
@@ -183,16 +184,14 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
      * Requests location updates from the FusedLocationApi.
      */
     protected void startLocationUpdates() {
-        // The final argument to {@code requestLocationUpdates()} is a LocationListener
-        // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
+
         if (mGoogleApiClient == null) {
             buildGoogleApiClient();
         }
         if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
         } else if (((MainActivity) getActivity()).mViewPager.getCurrentItem() == 0) { //only when current fragment is being viewed
-            LocationServices.FusedLocationApi.requestLocationUpdates(
-                    mGoogleApiClient, mLocationRequest, this);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
     }
 
@@ -291,10 +290,6 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
     }
 
-    @Override
-    public void onPageSelected() {
-        startLocationUpdates();
-    }
 
 //    @Override
 //    public void onMapReady(GoogleMap googleMap) {

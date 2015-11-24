@@ -46,6 +46,16 @@ public final class Constants {
     public static final int CLICK_EXIT_MULTISELECT_MODE = 683;
     public static final int CLICK_SELECTION_COUNT_CHANGED = 801;
 
-    public static final String LOCATION_SAVED_BROADCAST = PACKAGE_NAME + ".LOCATION_SAVED";
-    public static final String LOCATION_TEXT = "LOCATION_TEXT";
+    public static final String LOCATIONSAVERSERVICE_BROADCAST = PACKAGE_NAME + ".LOCATIONSAVER_SERVICE";
+    public static final String LOCATION_NAME = "LOCATION_NAME";
+    public static final String LOCATION_LATITUDE = "LOCATION_LATITUDE";
+    public static final String LOCATION_LONGITUDE = "LOCATION_LONGITUDE";
+
+    public static final String LOCATION_WIDGET_ADD_BUTTON = "LOCATION_WIDGET_ADD_BUTTON";
+    public static final String LOCATION_WIDGET_SHOW_LOCATION = "LOCATION_WIDGET_SHOW_LOCATION";
+
+    public static final int LOCATION_SAVED = 4813;
+    public static final int LOCATION_IN_PROGRESS = 1914;
+    public static final int LOCATION_FAILED = 7076;
+    public static final int LOCATION_INACCURATE = 2391;
 }

@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback, ViewPager.OnPageChangeListener {
+
     private static final float TAB_ALPHA_SELECTED = 1.0f;
     private static final float TAB_ALPHA_UNSELECTED = 0.5f;
     /**
@@ -45,14 +46,13 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         // primary sections of the activity.
         mTabLayout = (TabLayout) this.findViewById(R.id.tab_layout);
         mTabPagerAdapter = new TabPagerAdapter(this.getSupportFragmentManager(), this);
-        mTabPagerAdapter.add(null, R.drawable.icon_map, new LocationFragment());
-        mTabPagerAdapter.add(null, R.drawable.icon_list, new ListFragment());
+        mTabPagerAdapter.add(null, R.drawable.icon_map);
+        mTabPagerAdapter.add(null, R.drawable.icon_list);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mTabPagerAdapter);
         mViewPager.addOnPageChangeListener(this);
-
         setTabLayoutViewPager(mViewPager);
 
         new Thread(new Runnable() {
@@ -61,6 +61,25 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
                 makeImageDirectory();
             }
         }).run();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Intent intent = getIntent();
+        if (intent != null) {
+            String fragmentToShow = intent.getStringExtra(Constants.SOURCE);
+//            Toast.makeText(this, "fragemtnToShow="+fragmentToShow, Toast.LENGTH_LONG).show();
+            if (fragmentToShow != null && fragmentToShow.equals(Constants.LIST_FRAGMENT)) {
+                ListFragment listFragment = (ListFragment) findCurrentFragment(1);
+                if (listFragment != null) {
+                    listFragment.onListItemChanged();
+                }
+
+                mViewPager.setCurrentItem(1);
+                intent.removeExtra(Constants.SOURCE);
+            }
+        }
     }
 
 
@@ -87,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         Log.d("MainActivity", "onActivityResult() called");
         if (requestCode==Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode==RESULT_OK) {
             mViewPager.setCurrentItem(Constants.LIST_FRAGMENT_POSITION);
-            ListFragment listFragment = (ListFragment) mTabPagerAdapter.getItem(Constants.LIST_FRAGMENT_POSITION);
+            ListFragment listFragment = (ListFragment) findCurrentFragment(1);
             listFragment.onListItemChanged();
         }
     }
@@ -100,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     public void showMarkersOnMap(List<MarkerOptions> markers) {
         if (mViewPager ==  null) return;
         mViewPager.setCurrentItem(Constants.LOCATION_FRAGMENT_POSITION);
-        LocationFragment locationFragment = (LocationFragment) mTabPagerAdapter.getItem(Constants.LOCATION_FRAGMENT_POSITION);
+        LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
         locationFragment.showMarkers(markers);
     }
 
@@ -116,9 +135,15 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
     @Override
     public void onPageSelected(int position) {
-        Fragment fragment = mTabPagerAdapter.getItem(position);
-        if (fragment instanceof TabPagerAdapter.TabPagerListener) {
-            ((TabPagerAdapter.TabPagerListener) fragment).onPageSelected();
+        LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
+        if (locationFragment == null) return;
+        switch (position) {
+            case 0:
+                locationFragment.startLocationUpdates();
+                break;
+            case 1:
+                locationFragment.stopLocationUpdates();
+                break;
         }
     }
 
@@ -158,15 +183,15 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                if (tab.getPosition() == position) {
-                    TabPagerAdapter adapter = (TabPagerAdapter) viewPager.getAdapter();
-                    Fragment fragment = adapter.getItem(tab.getPosition());
+//                if (tab.getPosition() == position) {
+//                    TabPagerAdapter adapter = (TabPagerAdapter) viewPager.getAdapter();
+//                    Fragment fragment = adapter.getItem(tab.getPosition());
 
 //                    if (fragment instanceof ScrollableInterface) {
 //                        ScrollableInterface scrollable = (ScrollableInterface) fragment;
 //                        scrollable.scrollToTop();
 //                    }
-                }
+//                }
             }
         });
 
@@ -182,37 +207,9 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-//    public static class PlaceholderFragment extends Fragment {
-//        /**
-//         * The fragment argument representing the section number for this
-//         * fragment.
-//         */
-//        private static final String ARG_SECTION_NUMBER = "section_number";
-//
-//        /**
-//         * Returns a new instance of this fragment for the given section
-//         * number.
-//         */
-//        public static PlaceholderFragment newInstance(int sectionNumber) {
-//            PlaceholderFragment fragment = new PlaceholderFragment();
-//            Bundle args = new Bundle();
-//            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-//            fragment.setArguments(args);
-//            return fragment;
-//        }
-//
-//        public PlaceholderFragment() {
-//        }
-//
-//        @Override
-//        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                                 Bundle savedInstanceState) {
-//            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-//            return rootView;
-//        }
-//    }
+    private Fragment findCurrentFragment(int position) {
+        return getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
+
+    }
 
 }
