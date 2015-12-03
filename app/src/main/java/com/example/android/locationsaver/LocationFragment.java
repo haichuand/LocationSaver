@@ -53,7 +53,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     private Location mCurrentLocation;
     private SupportMapFragment mMapFragment;
     private GoogleMap mMap;
-    private boolean mMoveCameraToCurrentLocation;
+    boolean mMoveCameraToCurrentLocation;
     //    private MainActivity mActivity;
     private TextView mAccuracyView;
     private int mAccuracy; //accuracy of current location

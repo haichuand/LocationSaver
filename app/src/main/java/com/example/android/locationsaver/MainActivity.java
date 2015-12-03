@@ -1,10 +1,14 @@
 package com.example.android.locationsaver;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,13 +16,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.File;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback, ViewPager.OnPageChangeListener {
+public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback,
+        ViewPager.OnPageChangeListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final float TAB_ALPHA_SELECTED = 1.0f;
     private static final float TAB_ALPHA_UNSELECTED = 0.5f;
@@ -30,6 +39,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     private String TAG = "MainActivity";
     private TabLayout mTabLayout;
     private TabPagerAdapter mTabPagerAdapter;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +75,27 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
                 makeImageDirectory();
             }
         }).run();
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA}, 0);
+        }
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -104,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("MainActivity", "onActivityResult() called");
-        if (requestCode==Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode==RESULT_OK) {
+        if (requestCode == Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             mViewPager.setCurrentItem(Constants.LIST_FRAGMENT_POSITION);
             ListFragment listFragment = (ListFragment) findCurrentFragment(1);
             listFragment.onListItemChanged();
@@ -117,16 +152,15 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
     @Override
     public void showMarkersOnMap(List<MarkerOptions> markers) {
-        if (mViewPager ==  null) return;
+        if (mViewPager == null) return;
         mViewPager.setCurrentItem(Constants.LOCATION_FRAGMENT_POSITION);
         LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
+        locationFragment.mMoveCameraToCurrentLocation = false;
         locationFragment.showMarkers(markers);
     }
 
     public void makeImageDirectory() {
-        String imageDirectory = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES).getPath() + "/LocationSaverImages";
-        File file = new File(imageDirectory);
+        File file = new File(Constants.IMAGE_DIRECTORY);
         if (!file.exists()) {
             if (!file.mkdirs())
                 Log.d(TAG, "Error making directory " + file.getPath());
@@ -211,5 +245,57 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         return getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
 
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.example.android.locationsaver/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.example.android.locationsaver/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
+        if (grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, R.string.must_have_permission, Toast.LENGTH_LONG).show();
+            System.exit(0);
+        }
+
+        makeImageDirectory();
+    }
+
 
 }

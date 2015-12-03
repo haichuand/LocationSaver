@@ -68,4 +68,20 @@ public class ImageUtils {
         return bitmap;
     }
 
+//    public static void saveResourceImageToSdCard (Context context, int resourceId, String imagePath) {
+//        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId);
+//        File imageFile = new File(imagePath);
+//        try {
+//            FileOutputStream out = new FileOutputStream(imageFile);
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+//            out.flush();
+//            out.close();
+//
+//        } catch (FileNotFoundException e) {
+//            Log.d("ImageUtils", "FileNotFound Exception on " + imagePath);
+//        } catch (IOException e) {
+//            Log.d("ImageUtils", "IO Exception on " + imagePath);
+//        }
+//    }
+
 }

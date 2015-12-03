@@ -95,10 +95,14 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 //        db.close();
 //        mDbHandler.insertTestRows();
         mCursor = mDbHandler.selectAllRows();
-        if (!mCursor.moveToFirst()) {
-            mDbHandler.insertTestRows();
-            mCursor = mDbHandler.selectAllRows();
-        }
+//        if (!mCursor.moveToFirst()) {
+//            if (ContextCompat.checkSelfPermission(getActivity(),
+//                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//                mDbHandler.insertTestRows();
+//                copyTestRowImagesFromResource();
+//                mCursor = mDbHandler.selectAllRows();
+//            }
+//        }
         setHasOptionsMenu(true);
     }
 
@@ -279,5 +283,19 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     public interface ListFragmentCallback {
         void showMarkersOnMap(List<MarkerOptions> markers);
     }
+
+//    private void copyTestRowImagesFromResource() {
+//        int testRowImageRes[] = new int[] {R.drawable.r1, R.drawable.r1_tn, R.drawable.r2, R.drawable.r2_tn,
+//         R.drawable.r3, R.drawable.r3_tn, R.drawable.r4, R.drawable.r4_tn, R.drawable.r5, R.drawable.r5_tn,
+//         R.drawable.r6, R.drawable.r6_tn, R.drawable.r7, R.drawable.r7_tn, R.drawable.r8, R.drawable.r8_tn};
+//
+//        String imageFileNames[] = new String[] {"1.jpg", "1_tn.jpg", "2.jpg", "2_tn.jpg", "3.jpg", "3_tn.jpg",
+//         "4.jpg", "4_tn.jpg", "5.jpg", "5_tn.jpg", "6.jpg", "6_tn.jpg", "7.jpg", "7_tn.jpg", "8.jpg", "8_tn.jpg"};
+//
+//        for (int i=0; i<16; i++) {
+//            String imageFilePath = Constants.IMAGE_DIRECTORY + imageFileNames[i];
+//            ImageUtils.saveResourceImageToSdCard(getActivity(), testRowImageRes[i], imageFilePath);
+//        }
+//    }
 
 }

@@ -1,6 +1,5 @@
 package com.example.android.locationsaver;
 
-import android.app.IntentService;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Intent;
@@ -21,19 +20,15 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p/>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
+ *
  */
 public class LocationSaverService extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener{
 
     private static final String TAG = "LocationSaverService";
-    private static final int UPDATE_INTERVAL=1000; //update interval of location request, Unit: ms
-    private int accuracyThreshold = 20; //threshold of accuracy to save current location, Unit: meters
-    private long timeoutThreshold = 60000L; //threshold of time out to stop service, Unit: ms
+    private static final long UPDATE_INTERVAL=1000L; //update interval of location request, Unit: ms
+    private static final float accuracyThreshold = 20; //threshold of accuracy to save current location, Unit: meters
+    private static final long timeoutThreshold = 60000L; //threshold of time out to stop service, Unit: ms
     private long timeoutMilliseconds;
     private  Handler handler;
 
@@ -168,8 +163,8 @@ public class LocationSaverService extends Service implements GoogleApiClient.Con
             googleApiClient.disconnect();
 //            this.stopSelf();
         }
-
-        if (location.getAccuracy() <= accuracyThreshold) {
+        float accuracy = location.getAccuracy();
+        if (accuracy <= accuracyThreshold) {
             addLocationToDbAndBroadcast(location);
 
 

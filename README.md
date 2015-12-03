@@ -67,3 +67,11 @@ Weekly Activity Log<br>
 ● On pressing button in widget, it sends a PendingIntent to start LocationSaverService. Once the location is saved to database, LocationSaverService broadcast results to widget<br>
 ● Also changed TabPagerAdapter in MainActivity to use icons instead of tab tiles and to show animation of tab changing<br>
 ● Plan for next week: implement the LocationSaverService to get location, save location and update widget.
+
+12/2/2015<br>
+● Created LocationWidget to let user save current location with one click<br>
+● Click on save button in widget starts LocationSaverService to get current location and save in database<br>
+● LocationSaverService only saves current location when the accuracy is within a predefined threshold<br>
+● While retrieving current location, the widget shows "Saving Location..." hints in text field<br>
+● All communication between LocationSaverService and LocationWidget is through broadcast receivers<br>
+● Click on text field in widget starts MainActivity and shows ListFragment<br>

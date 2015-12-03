@@ -95,18 +95,16 @@ public class LocationDBHandler extends SQLiteOpenHelper {
 
 
     public void insertTestRows() {
-        LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8, loc9, loc10;
+        LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8;
         String sdPath = Constants.IMAGE_DIRECTORY;
         loc1 = new LocationItem("Seattle Waterfront", 47.607795, -122.342424, "Alaskan Way & Pike St, Seattle, WA 98001, USA", "The most beautiful waterfront!", sdPath+"1_tn.jpg", 1407004217000L);
-        loc2 = new LocationItem("2015-09-07_113247", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful watefall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
+        loc2 = new LocationItem("McWay Waterfall", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful watefall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
         loc3 = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "Presidio, San Francisco, CA", "Beach by Golden Gate Bridge", sdPath+"3_tn.jpg", 1422469635000L);
         loc4 = new LocationItem("Yosemite Falls", 37.747565, -119.596386, "", "Iconic falls in Yosemite Valley", sdPath+"4_tn.jpg", 1432486111000L);
         loc5 = new LocationItem("Delicate Arch", 38.743650, -109.499252, "", "Beautiful sandstone arch in the high desert of Utah", sdPath+"5_tn.jpg", 1372964485000L);
         loc6 = new LocationItem("Mt. Rainier", 46.787869, -121.736205, "", "On Skyline trail in Paradise area", sdPath+"6_tn.jpg", 1374775429000L);
         loc7 = new LocationItem("Hana, Maui", 20.788188, -156.003554, "", "Black sand beach state park", sdPath+"7_tn.jpg", 1419989741000L);
         loc8 = new LocationItem("Lake Tahoe", 38.968932, -120.089656, "", "On Rubicon trail", sdPath+"8_tn.jpg", 1436204124000L);
-        loc9 = new LocationItem("Nov 7, 2015 5:03:56PM", 37.5879333, -122.3307983, "", "Trail near Cyote Point", sdPath+"2015_11_07_17_03_58_tn.jpg", 1446944636000L);
-        loc10 = new LocationItem("Townhouse", 37.5589108, -122.2631193, "", "Accuracy: 21 feet", sdPath+"2015_11_11_16_36_26_tn.jpg", 1447202737000L);
         List<LocationItem> list = new ArrayList<LocationItem>();
         list.add(loc1);
         list.add(loc2);
@@ -116,8 +114,6 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         list.add(loc6);
         list.add(loc7);
         list.add(loc8);
-        list.add(loc9);
-        list.add(loc10);
         insertLocations(list);
     }
 
