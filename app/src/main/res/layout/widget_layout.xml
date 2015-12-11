@@ -30,8 +30,6 @@
             android:layout_weight="4"
             android:lines="1"
             android:textAppearance="@android:style/TextAppearance.Small" />
-
-
     </LinearLayout>
 
 
@@ -43,10 +41,10 @@
         android:orientation="horizontal">
 
         <ImageView
-
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="right"
+            android:layout_gravity="center"
+            android:layout_marginLeft="6dp"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_add_location_96pix" />
 

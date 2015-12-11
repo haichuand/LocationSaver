@@ -100,6 +100,12 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        buildGoogleApiClient(context);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createLocationRequest();
@@ -113,6 +119,13 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         mMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mMap = mMapFragment.getMap();
         mMap.setMyLocationEnabled(true);
+        Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mCurrentLocation != null) {
+            CameraUpdate center = CameraUpdateFactory.newLatLngZoom(
+                    new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), DEFAULT_MAP_ZOOM);
+            mMap.moveCamera(center);
+        }
+
         mAccuracyView = (TextView) view.findViewById(R.id.text_accuracy);
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_save_location);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -133,15 +146,11 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public void onResume() {
         super.onResume();
         startLocationUpdates();
-//        mMoveCameraToCurrentLocation = true;
     }
 
 
     @Override
     public void onPause() {
-//        // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-//        if(mActivity==null)
-//            Log.d(TAG, "onPause: getActivity() returns null");
         stopLocationUpdates();
         super.onPause();
     }
@@ -153,19 +162,8 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         super.onStop();
     }
 
-//    @Override
-//    public void onActivityResult (int requestCode, int resultCode, Intent data) {
-//        ((MainActivity) getActivity()).onActivityResult(requestCode, resultCode, data);
-//    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-    }
-
-    private synchronized void buildGoogleApiClient() {
-            mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+    private synchronized void buildGoogleApiClient(Context context) {
+            mGoogleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
@@ -184,9 +182,8 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
      * Requests location updates from the FusedLocationApi.
      */
     protected void startLocationUpdates() {
-
         if (mGoogleApiClient == null) {
-            buildGoogleApiClient();
+            buildGoogleApiClient(getContext());
         }
         if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
@@ -199,12 +196,6 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
      * Removes location updates from the FusedLocationApi.
      */
     protected void stopLocationUpdates() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-
-        // The final argument to {@code requestLocationUpdates()} is a LocationListener
-        // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
         if(mGoogleApiClient!=null && mGoogleApiClient.isConnected())
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
@@ -248,19 +239,11 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         }
     }
 
-
     public void saveCurrentLocation() {
         Intent intent = new Intent(getContext(), EditEntryActivity.class);
         intent.putExtra(Constants.SOURCE, Constants.LOCATION_FRAGMENT);
         intent.putExtra(Constants.BUNDLE_LOCATION, mCurrentLocation);
         getActivity().startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
-    }
-
-
-    @Override
-    public void onDetach() {
-        Log.d(TAG, "onDetach() called");
-        super.onDetach();
     }
 
     public void showMarkers(List<MarkerOptions> markers) {

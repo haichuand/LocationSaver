@@ -1,13 +1,10 @@
 package com.example.android.locationsaver;
 
-import android.app.ProgressDialog;
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -22,7 +19,7 @@ import java.util.Date;
 /**
  *
  */
-public class LocationSaverService extends Service implements GoogleApiClient.ConnectionCallbacks,
+public class LocationSaverService extends IntentService implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener{
 
     private static final String TAG = "LocationSaverService";
@@ -30,21 +27,23 @@ public class LocationSaverService extends Service implements GoogleApiClient.Con
     private static final float accuracyThreshold = 20; //threshold of accuracy to save current location, Unit: meters
     private static final long timeoutThreshold = 60000L; //threshold of time out to stop service, Unit: ms
     private long timeoutMilliseconds;
-    private  Handler handler;
+    private Handler handler;
 
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
-    private ProgressDialog progressDialog;
-    private static final int SHOW_PROGRESS_DIALOG = 17;
-    private static final int DISMISS_PROGRESS_DIALOG = 197;
 
-    @Override
-    public void onCreate() {
-       handler = new Handler();
+    public LocationSaverService() {
+        super(TAG);
     }
 
     @Override
-    public int onStartCommand (Intent intent, int flags, int startId) {
+    public void onCreate() {
+        super.onCreate();
+        handler = new Handler();
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
         timeoutMilliseconds = System.currentTimeMillis();
 
         if (intent != null) {
@@ -69,14 +68,6 @@ public class LocationSaverService extends Service implements GoogleApiClient.Con
 
             }
         }
-        return 0;
-    }
-
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
 //    @Override

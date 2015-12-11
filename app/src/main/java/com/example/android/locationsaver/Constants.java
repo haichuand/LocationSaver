@@ -27,7 +27,7 @@ public final class Constants {
 
     public static final String LIST_FRAGMENT = PACKAGE_NAME + ".ListFragment";
 
-    public static final String SOURCE = "SOURCE"; //tag to indicate source of intent
+    public static final String SOURCE = PACKAGE_NAME + ".SOURCE"; //tag to indicate source of intent
 
     public static final String IMAGE_DIRECTORY = Environment.
             getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -58,4 +58,7 @@ public final class Constants {
     public static final int LOCATION_IN_PROGRESS = 1914;
     public static final int LOCATION_FAILED = 7076;
     public static final int LOCATION_INACCURATE = 2391;
+
+    public static final String SHAREDPREFERENCE = PACKAGE_NAME + ".SharedPreference";
+    public static final String NO_LOCATION_SAVED = "No location saved";
 }

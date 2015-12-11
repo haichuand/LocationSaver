@@ -1,7 +1,6 @@
 package com.example.android.locationsaver;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -33,7 +32,6 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     LocationDBHandler mDbHandler;
     private LocationListAdapter mAdapter;
     private Cursor mCursor;
-    private Context mContext;
     private ActionMode mActionMode;
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
@@ -87,9 +85,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mContext = this.getActivity();
-        mDbHandler = new LocationDBHandler(mContext);
+        mDbHandler = new LocationDBHandler(getActivity());
 //        SQLiteDatabase db = mDbHandler.getWritableDatabase();
 //        db.delete(LocationDBHandler.LocationEntry.TABLE, null, null);
 //        db.close();
@@ -113,7 +109,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         View v = inflater.inflate(R.layout.fragment_list, container, false);
         RecyclerView locationListView = (RecyclerView) v.findViewById(R.id.location_list_view);
         locationListView.setHasFixedSize(true);
-        locationListView.setLayoutManager(new LinearLayoutManager(mContext));
+        locationListView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mAdapter = new LocationListAdapter(mCursor, this);
         locationListView.setAdapter(mAdapter);
 //        mAdapter.notifyDataSetChanged();

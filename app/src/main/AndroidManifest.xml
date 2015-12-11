@@ -56,11 +56,10 @@
 
         <service
             android:name=".FetchAddressService"
-            android:exported="false"></service>
+            android:exported="false" />
         <service
             android:name=".LocationSaverService"
-            android:exported="false" >
-        </service>
+            android:exported="false" />
     </application>
 
 </manifest>
