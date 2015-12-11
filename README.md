@@ -1,1 +1,2 @@
-Location Saver is an Android app that allows users to save, edit and navigate back to current locations conveniently.<br>
+<h2>Introduction</h2>
+Location Saver is an Android app that allows users to conveniently save, edit and navigate back to current locations on the phone. User can save current location with just one click using the desktop widget. Inside the app, user can save current location with more customization, such as editing its name, notes and getting its address from the web. User can also browse the saved locations in a list and show the locations in an installed mapping app for navigation.<br>
