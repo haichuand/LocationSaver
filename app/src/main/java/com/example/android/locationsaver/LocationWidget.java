@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -73,8 +74,8 @@ public class LocationWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-//        Log.d(TAG, action);
+        String action = intent.getAction();
+        Log.d(TAG, action);
         /*
          * Very important: onReceive() will be called first before onUpdate(). The RemoteViews rv should be initialized
          * only once here, and all updates work on the same rv instance. Otherwise the click listeners on rv may not be
@@ -83,17 +84,21 @@ public class LocationWidget extends AppWidgetProvider {
         if (rv == null) {
             rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         }
-        final Context context1 = context;
 
-        String action = intent.getAction();
-        if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
-            SharedPreferences preferences = context.getSharedPreferences(Constants.SHAREDPREFERENCE, Context.MODE_PRIVATE);
-            boolean noLocationSaved = preferences.getBoolean(Constants.NO_LOCATION_SAVED, true);
-            if (noLocationSaved) {
-                rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.no_saved_location));
-                rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.press_save_button_hint));
-            }
+        switch (action) {
+            case AppWidgetManager.ACTION_APPWIDGET_UPDATE:
+                SharedPreferences preferences = context.getSharedPreferences(Constants.SHAREDPREFERENCE, Context.MODE_PRIVATE);
+                boolean noLocationSaved = preferences.getBoolean(Constants.NO_LOCATION_SAVED, true);
+                if (noLocationSaved) {
+                    rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.no_saved_location));
+                    rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.press_save_button_hint));
+                }
+                break;
+            case AppWidgetManager.ACTION_APPWIDGET_DISABLED:
+                updateSharedPreferences(context, true);
+                break;
         }
+
 
         int source = intent.getIntExtra(Constants.SOURCE, -1);
         switch (source) {
@@ -117,6 +122,7 @@ public class LocationWidget extends AppWidgetProvider {
                 double longitude = intent.getDoubleExtra(Constants.LOCATION_LONGITUDE, 0);
                 rv.setTextViewText(R.id.widget_location_name, name);
                 rv.setTextViewText(R.id.widget_location_coord, latitude + ", " + longitude);
+                final Context context1 = context;
                 handler.post(new Runnable() {
                     @Override
                     public void run() {

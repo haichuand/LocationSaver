@@ -51,7 +51,7 @@
     <string name="cannot_achieve_accuracy">Unable to fix location within required accuracy. Location not saved.</string>
     <string name="location_saved">Successfully saved current location.</string>
     <string name="no_saved_location">No saved location yet</string>
-    <string name="press_save_button_hint">Press button to save location</string>
+    <string name="press_save_button_hint">Click icon to save location</string>
     <string name="saving_location">Saving location...</string>
     <string name="please_wait">Please wait a few moments</string>
     <string name="location_failed">Cannot get location</string>
