@@ -48,8 +48,7 @@ public final class Constants {
 
     public static final String LOCATIONSAVERSERVICE_BROADCAST = PACKAGE_NAME + ".LOCATIONSAVER_SERVICE";
     public static final String LOCATION_NAME = "LOCATION_NAME";
-    public static final String LOCATION_LATITUDE = "LOCATION_LATITUDE";
-    public static final String LOCATION_LONGITUDE = "LOCATION_LONGITUDE";
+    public static final String LOCATION_DESCRIPTION = "LOCATION_DESCRIPTION";
 
     public static final String LOCATION_WIDGET_ADD_BUTTON = "LOCATION_WIDGET_ADD_BUTTON";
     public static final String LOCATION_WIDGET_SHOW_LOCATION = "LOCATION_WIDGET_SHOW_LOCATION";

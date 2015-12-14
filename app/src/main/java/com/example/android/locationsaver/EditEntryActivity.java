@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -53,11 +54,12 @@ public class EditEntryActivity extends AppCompatActivity implements
     private ImageView mImageView;
     private Location mLocation;
     //flag to indicate if we want to get address through FetchAddressService
+    private boolean isGetAddress;
     private View.OnClickListener mImageClickListener;
     protected GoogleApiClient mGoogleApiClient;
     private boolean mDeleteImageFlag;
     /*Receiver registered with this activity to get the response from FetchAddressIntentService.*/
-    private AddressResultReceiver mResultReceiver;
+    private ResultReceiver mResultReceiver;
     //image file saved from camera app
     private String mSaveImagePath, mThumbnailImagePath;
     private double mLongitude, mLatitude;
@@ -71,10 +73,10 @@ public class EditEntryActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         buildGoogleApiClient();
         setContentView(R.layout.activity_edit_entry);
-        Toolbar toolbar= (Toolbar) findViewById(R.id.tool_bar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar !=  null) {
+        if (actionBar != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
@@ -86,10 +88,38 @@ public class EditEntryActivity extends AppCompatActivity implements
         mImageView = (ImageView) findViewById(R.id.entry_image);
         //make the name field select all on click for easier editing
         mHandler = new Handler();
-        mResultReceiver = new AddressResultReceiver(mHandler);
+        mResultReceiver = new ResultReceiver(mHandler) {
+
+            /* Receives data sent from FetchAddressService and updates the address field.*/
+            @Override
+            protected void onReceiveResult(int resultCode, Bundle resultData) {
+
+                if (resultCode == Constants.SUCCESS_RESULT) {
+                    String addressText = resultData.getString(Constants.RESULT_DATA_KEY);
+                    mAddressView.setText(addressText);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(EditEntryActivity.this, getString(R.string.address_received), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else if (resultCode == Constants.FAILURE_RESULT) {
+                    final String errorMessage = resultData.getString(Constants.RESULT_DATA_KEY);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(EditEntryActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+
+        };
+
         mImageClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                view.startAnimation(AnimationUtils.loadAnimation(EditEntryActivity.this, R.anim.view_click_animator));
                 startCameraForImage();
             }
         };
@@ -110,90 +140,92 @@ public class EditEntryActivity extends AppCompatActivity implements
         mDeleteImageFlag = false;
         mDbHandler = new LocationDBHandler(this);
         Intent intent = getIntent();
-        if (intent != null) {
-            String source = intent.getStringExtra(Constants.SOURCE);
-            if (source == null) {
-                return;
+        if (intent == null) return;
+        String source = intent.getStringExtra(Constants.SOURCE);
+        if (source == null) {
+            return;
+        }
+
+        //intent is coming from LocationFragment to save location
+        if (source.equals(Constants.LOCATION_FRAGMENT)) {
+            isGetAddress = true; //get address from FetchAddressService
+            if (TextUtils.isEmpty(mNameView.getText())) {
+                mNameView.setHint(DateFormat.getDateTimeInstance().format(new Date()));
             }
-            //intent is coming from LocationFragment to save location
-            if (source.equals(Constants.LOCATION_FRAGMENT)) {
-                if (TextUtils.isEmpty(mNameView.getText())) {
-                    mNameView.setHint(DateFormat.getDateTimeInstance().format(new Date()));
-                }
-                mImageView.setImageResource(R.drawable.icon_camera);
-                mImageView.setTag(ICON_VIEW);
-                mImageView.setOnClickListener(mImageClickListener);
-                mLocation = intent.getParcelableExtra(Constants.BUNDLE_LOCATION);
-                int accuracyFeet = (int) mLocation.getAccuracy() * 3;
-                mLatitude = mLocation.getLatitude();
-                mLongitude = mLocation.getLongitude();
-                mCoordView.setText(mLatitude + ", " + mLongitude);
-                mNoteView.setText("Accuracy: " + accuracyFeet + " feet");
-                mDeleteImageFlag = true;
-            }
-            //intent is coming from ListFragment to edit list
-            else if (source.equals(Constants.LIST_FRAGMENT)) {
-                mRowId = intent.getLongExtra(Constants.BUNDLE_DB_ROWID, -1);
-                String sqlString = "SELECT * FROM " + LocationDBHandler.LocationEntry.TABLE +
-                        " WHERE " + LocationDBHandler.LocationEntry._ID + "=" + mRowId;
-                Cursor cursor = mDbHandler.getReadableDatabase().rawQuery(sqlString, null);
-                if (cursor.moveToFirst()) {
-                    mNameView.setText(cursor.getString(LocationDBHandler.NAME));
-                    mCoordView.setText(cursor.getDouble(LocationDBHandler.LATITUDE) + ", " +
-                            cursor.getDouble(LocationDBHandler.LONGITUDE));
-                    mAddressView.setText(cursor.getString(LocationDBHandler.ADDRESS));
-                    mNoteView.setText(cursor.getString(LocationDBHandler.NOTE));
-                    mThumbnailImagePath = cursor.getString(LocationDBHandler.IMAGE);
+            mImageView.setImageResource(R.drawable.icon_camera);
+            mImageView.setTag(ICON_VIEW);
+            mImageView.setOnClickListener(mImageClickListener);
+            mLocation = intent.getParcelableExtra(Constants.BUNDLE_LOCATION);
+            int accuracyFeet = (int) mLocation.getAccuracy() * 3;
+            mLatitude = mLocation.getLatitude();
+            mLongitude = mLocation.getLongitude();
+            mCoordView.setText(mLatitude + ", " + mLongitude);
+            mNoteView.setText("Accuracy: " + accuracyFeet + " feet");
+            mDeleteImageFlag = true;
+        }
+        //intent is coming from ListFragment to edit list
+        else if (source.equals(Constants.LIST_FRAGMENT)) {
+            isGetAddress = false; //do not get address from FetchAddressService
+            mRowId = intent.getLongExtra(Constants.BUNDLE_DB_ROWID, -1);
+            String sqlString = "SELECT * FROM " + LocationDBHandler.LocationEntry.TABLE +
+                    " WHERE " + LocationDBHandler.LocationEntry._ID + "=" + mRowId;
+            Cursor cursor = mDbHandler.getReadableDatabase().rawQuery(sqlString, null);
+            if (cursor.moveToFirst()) {
+                mNameView.setText(cursor.getString(LocationDBHandler.NAME));
+                mCoordView.setText(cursor.getDouble(LocationDBHandler.LATITUDE) + ", " +
+                        cursor.getDouble(LocationDBHandler.LONGITUDE));
+                mAddressView.setText(cursor.getString(LocationDBHandler.ADDRESS));
+                mNoteView.setText(cursor.getString(LocationDBHandler.NOTE));
+                mThumbnailImagePath = cursor.getString(LocationDBHandler.IMAGE);
 
 
-                    if (mThumbnailImagePath != null) {
+                if (mThumbnailImagePath != null) {
 
-                        //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
-                        int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
-                        String fullSizeImagePath = "";
-                        if (suffixIndex > 0) {
-                            fullSizeImagePath = mThumbnailImagePath.substring(0, suffixIndex)
-                                    + mThumbnailImagePath.substring(suffixIndex+3);
-                        }
+                    //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
+                    int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
+                    String fullSizeImagePath = "";
+                    if (suffixIndex > 0) {
+                        fullSizeImagePath = mThumbnailImagePath.substring(0, suffixIndex)
+                                + mThumbnailImagePath.substring(suffixIndex + 3);
+                    }
 
-                        Uri imageUri;
-                        File imageFile = new File(fullSizeImagePath);
+                    Uri imageUri;
+                    File imageFile = new File(fullSizeImagePath);
+                    if (imageFile.exists()) {
+                        imageUri = Uri.parse(fullSizeImagePath);
+                        mImageView.setImageURI(imageUri);
+                        mImageView.setTag(IMAGE_VIEW);
+                        return;
+                    } else {
+                        imageFile = new File(mThumbnailImagePath);
                         if (imageFile.exists()) {
-                            imageUri = Uri.parse(fullSizeImagePath);
+                            imageUri = Uri.parse(mThumbnailImagePath);
                             mImageView.setImageURI(imageUri);
                             mImageView.setTag(IMAGE_VIEW);
                             return;
                         }
-                        else {
-                            imageFile = new File(mThumbnailImagePath);
-                            if (imageFile.exists()) {
-                                imageUri = Uri.parse(mThumbnailImagePath);
-                                mImageView.setImageURI(imageUri);
-                                mImageView.setTag(IMAGE_VIEW);
-                                return;
-                            }
-                        }
                     }
-                    mImageView.setImageResource(R.drawable.icon_image);
-                    mImageView.setTag(ICON_VIEW);
                 }
+                mImageView.setImageResource(R.drawable.icon_image);
+                mImageView.setTag(ICON_VIEW);
             }
-
-            ViewGroup.LayoutParams params = mImageView.getLayoutParams();
-            final float scale = getResources().getDisplayMetrics().density;
-            switch ((int) mImageView.getTag()) {
-                case ICON_VIEW:
-                    params.width = params.height = (int) (80 * scale);
-                    break;
-                case IMAGE_VIEW:
-                    params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                    mImageView.setMaxWidth((int) (430 * scale));
-                    mImageView.setMaxHeight((int) (240 * scale));
-                    break;
-            }
-            intent.removeExtra(Constants.SOURCE);
         }
+
+        ViewGroup.LayoutParams params = mImageView.getLayoutParams();
+        final float scale = getResources().getDisplayMetrics().density;
+        switch ((int) mImageView.getTag()) {
+            case ICON_VIEW:
+                params.width = params.height = (int) (80 * scale);
+                break;
+            case IMAGE_VIEW:
+                params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                mImageView.setMaxWidth((int) (430 * scale));
+                mImageView.setMaxHeight((int) (240 * scale));
+                break;
+        }
+        intent.removeExtra(Constants.SOURCE);
+
     }
 
     @Override
@@ -291,7 +323,8 @@ public class EditEntryActivity extends AppCompatActivity implements
             return;
         }
 
-        getAddress();
+        if (isGetAddress)
+            getAddress();
     }
 
     @Override
@@ -323,8 +356,7 @@ public class EditEntryActivity extends AppCompatActivity implements
                 location = new Location("FromEdiText");
                 location.setLatitude(latitude);
                 location.setLongitude(longitude);
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 Toast.makeText(this, R.string.incorrect_coords, Toast.LENGTH_SHORT).show();
             }
             if (location != null)
@@ -392,33 +424,6 @@ public class EditEntryActivity extends AppCompatActivity implements
         }
     }
 
-    /**
-     * Receiver for data sent from FetchAddressService.
-     */
-    class AddressResultReceiver extends ResultReceiver {
-        public AddressResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        /**
-         * Receives data sent from FetchAddressService and updates the address field.
-         */
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-
-            if (resultCode == Constants.SUCCESS_RESULT) {
-                String addressText = resultData.getString(Constants.RESULT_DATA_KEY);
-                mAddressView.setText(addressText);
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(EditEntryActivity.this, getString(R.string.address_received), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        }
-    }
-
     class makeThumbnailTask extends AsyncTask<String, Void, String> {
         private final WeakReference<ImageView> imageViewReference;
 
@@ -439,15 +444,15 @@ public class EditEntryActivity extends AppCompatActivity implements
 
                 //Returns null, sizes are in the options variable
                 BitmapFactory.decodeFile(imagePath, options);
-                double maxDim = (options.outWidth>options.outHeight ? options.outWidth : options.outHeight);
+                double maxDim = (options.outWidth > options.outHeight ? options.outWidth : options.outHeight);
                 int inSampleSize;
-                for (inSampleSize=1; maxDim/inSampleSize/maxSize >= 2.0; inSampleSize *= 2);
+                for (inSampleSize = 1; maxDim / inSampleSize / maxSize >= 2.0; inSampleSize *= 2) ;
 
                 options.inSampleSize = inSampleSize;
                 options.inJustDecodeBounds = false;
                 originalBitmap = BitmapFactory.decodeFile(imagePath, options);
                 orientedBitmap = ImageUtils.rotateBitmap(imagePath, originalBitmap);
-            }  catch (Exception e) {
+            } catch (Exception e) {
                 Log.d("EditEntryActivity", "Error decoding bitmap " + imagePath);
             }
 
@@ -483,13 +488,12 @@ public class EditEntryActivity extends AppCompatActivity implements
             }
 
             //resizes image to max dimension 480 for show in ListFragment
-            Bitmap thumbnailBitmap = Bitmap.createScaledBitmap(resized, (int) (outWidth/4), (int) (outHeight/4), false);
+            Bitmap thumbnailBitmap = Bitmap.createScaledBitmap(resized, (int) (outWidth / 4), (int) (outHeight / 4), false);
             int dotIndex = imagePath.lastIndexOf(".");
             String baseImageName;
             if (dotIndex > 0) {
                 baseImageName = imagePath.substring(0, dotIndex);
-            }
-            else {
+            } else {
                 Log.d("makeThumbnailTask", "Error extracting base image name");
                 return null;
             }
@@ -530,7 +534,6 @@ public class EditEntryActivity extends AppCompatActivity implements
             mImageView.setTag(IMAGE_VIEW);
         }
     }
-
 
 
 }

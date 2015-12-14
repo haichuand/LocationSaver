@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -112,6 +113,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
         View.OnClickListener mImageClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                view.startAnimation(AnimationUtils.loadAnimation(view.getContext(), R.anim.view_click_animator));
                 if (mSelectedItemList.size() == 0) {
                     mSelectedItemList.add(getAdapterPosition());
                     mListener.onListItemClicked(Constants.CLICK_SOURCE_IMAGE);
@@ -124,6 +126,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
         View.OnClickListener mTextClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                view.startAnimation(AnimationUtils.loadAnimation(view.getContext(), R.anim.view_click_animator));
                 if (mSelectedItemList.size() == 0) {
                     mSelectedItemList.add(getAdapterPosition());
                     mListener.onListItemClicked(Constants.CLICK_SOURCE_TEXT);

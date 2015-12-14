@@ -91,7 +91,7 @@ public class LocationWidget extends AppWidgetProvider {
                 boolean noLocationSaved = preferences.getBoolean(Constants.NO_LOCATION_SAVED, true);
                 if (noLocationSaved) {
                     rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.no_saved_location));
-                    rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.press_save_button_hint));
+                    rv.setTextViewText(R.id.widget_location_description, context.getString(R.string.press_save_button_hint));
                 }
                 break;
             case AppWidgetManager.ACTION_APPWIDGET_DISABLED:
@@ -104,24 +104,23 @@ public class LocationWidget extends AppWidgetProvider {
         switch (source) {
             case Constants.LOCATION_IN_PROGRESS:
                 rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.saving_location));
-                rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.please_wait));
+                rv.setTextViewText(R.id.widget_location_description, context.getString(R.string.please_wait));
                 break;
             case Constants.LOCATION_FAILED:
                 rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.location_failed));
-                rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.please_try_later));
+                rv.setTextViewText(R.id.widget_location_description, context.getString(R.string.please_try_later));
                 updateSharedPreferences(context, true);
                 break;
             case Constants.LOCATION_INACCURATE:
                 rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.location_inaccurate));
-                rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.please_try_later));
+                rv.setTextViewText(R.id.widget_location_description, context.getString(R.string.please_try_later));
                 updateSharedPreferences(context, true);
                 break;
             case Constants.LOCATION_SAVED:
                 String name = intent.getStringExtra(Constants.LOCATION_NAME);
-                double latitude = intent.getDoubleExtra(Constants.LOCATION_LATITUDE, 0);
-                double longitude = intent.getDoubleExtra(Constants.LOCATION_LONGITUDE, 0);
+                String description = intent.getStringExtra(Constants.LOCATION_DESCRIPTION);
                 rv.setTextViewText(R.id.widget_location_name, name);
-                rv.setTextViewText(R.id.widget_location_coord, latitude + ", " + longitude);
+                rv.setTextViewText(R.id.widget_location_description, description);
                 final Context context1 = context;
                 handler.post(new Runnable() {
                     @Override

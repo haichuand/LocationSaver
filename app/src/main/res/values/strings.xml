@@ -20,11 +20,11 @@
     <string name="edit_entry_menu_save">Save</string>
     <string name="edit_entry_menu_get_address">Get address</string>
 
-    <string name="no_location_data_provided">FetchAddressService: no location data received</string>
-    <string name="service_not_available">FetchAddressService: Geocoder service not available</string>
-    <string name="invalid_lat_long_used">FetchAddressService: invalid latitude/longitude</string>
-    <string name="no_address_found">FetchAddressService: no address found</string>
-    <string name="address_found">FetchAddressService: address found</string>
+    <string name="no_location_data_provided">No location data provided for address</string>
+    <string name="service_not_available">Cannot get address. Check network connection.</string>
+    <string name="invalid_lat_long_used">Invalid latitude/longitude</string>
+    <string name="no_address_found">No address found for current location</string>
+    <string name="address_found">Address found for current location</string>
 
     <string name="no_geocoder_available">Geocoder unavailable. No address updates.</string>
     <string name="incorrect_coords">Incorrect coordinates. Address not updated.</string>

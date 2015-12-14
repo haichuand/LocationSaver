@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ResultReceiver;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -31,6 +33,34 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
 
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
+    private Location mLocation;
+
+    ResultReceiver mResultReceiver = new ResultReceiver(handler) {
+
+        /* Receives data sent from FetchAddressService and updates the address field.*/
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            if (mLocation == null) {
+                Log.e(TAG, "mLocation is null");
+                return;
+            }
+
+            if (resultCode == Constants.SUCCESS_RESULT) {
+                String addressText = resultData.getString(Constants.RESULT_DATA_KEY)
+                        .replace(System.getProperty("line.separator"), " ");
+                String name = addLocationToDb(mLocation, addressText);
+                sendLocationSavedBroadcast(name, addressText);
+            }
+            else if (resultCode == Constants.FAILURE_RESULT){
+                String name = addLocationToDb(mLocation, null);
+                sendLocationSavedBroadcast(name, mLocation.getLatitude() + ", " + mLocation.getLongitude());
+            }
+            else {
+                Log.e(TAG, "resultCode mismatch");
+            }
+        }
+
+    };
 
     public LocationSaverService() {
         super(TAG);
@@ -70,31 +100,8 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         }
     }
 
-//    @Override
-//    protected void onHandleIntent(Intent intent) {
-//        if (intent != null) {
-//            String source = intent.getStringExtra(Constants.SOURCE);
-//            if (source != null) {
-//                switch(source) {
-//                    case Constants.LOCATION_WIDGET_ADD_BUTTON:
-//                        saveCurrentLocation();
-//                        break;
-//                    case Constants.LOCATION_WIDGET_SHOW_LOCATION:
-//                        Intent mainActivityIntent = new Intent(this, MainActivity.class);
-//                        mainActivityIntent.putExtra(Constants.SOURCE, Constants.LIST_FRAGMENT);
-//                        startActivity(mainActivityIntent);
-//                        break;
-//                    default:
-//                        assert false;
-//                }
-//
-//            }
-//        }
-//    }
-
     private void saveCurrentLocation() {
-//        Log.d(TAG, "saveCurrentLocation() called");
-        //creates location request
+        //creates location request if it is null
         if (locationRequest == null) {
             locationRequest = new LocationRequest();
             locationRequest.setInterval(UPDATE_INTERVAL);
@@ -138,6 +145,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
 
     @Override
     public void onLocationChanged(Location location) {
+
         //if timeout period passes without getting into required accuracy, broadcast failed message
         if (System.currentTimeMillis() - timeoutMilliseconds > timeoutThreshold) {
             Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
@@ -152,34 +160,46 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
 
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             googleApiClient.disconnect();
-//            this.stopSelf();
         }
+
         float accuracy = location.getAccuracy();
         if (accuracy <= accuracyThreshold) {
-            addLocationToDbAndBroadcast(location);
-
-
+            mLocation = location;
+            getAddress(location);
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             googleApiClient.disconnect();
-//            this.stopSelf();
         }
     }
 
-    private void addLocationToDbAndBroadcast(Location location) {
+    private String addLocationToDb(Location location, String address) {
         String name = DateFormat.getDateTimeInstance().format(new Date());
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
-        LocationItem item = new LocationItem(name, latitude, longitude, null, null, null, System.currentTimeMillis());
+        LocationItem item = new LocationItem(name, latitude, longitude, address, null, null, System.currentTimeMillis());
         LocationDBHandler dbHandler = new LocationDBHandler(this);
         dbHandler.insertLocation(item);
+        return name;
+    }
 
-        //send broadcast to widget
+    /**
+     * Send broadcast to widget
+     * @param name
+     * @param description
+     */
+    private void sendLocationSavedBroadcast(String name, String description) {
         Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
         broadcastIntent.putExtra(Constants.SOURCE, Constants.LOCATION_SAVED);
         broadcastIntent.putExtra(Constants.LOCATION_NAME, name);
-        broadcastIntent.putExtra(Constants.LOCATION_LATITUDE, latitude);
-        broadcastIntent.putExtra(Constants.LOCATION_LONGITUDE, longitude);
+        broadcastIntent.putExtra(Constants.LOCATION_DESCRIPTION, description);
         sendBroadcast(broadcastIntent);
+    }
+
+    //get text representation of address in mLocation
+    private void getAddress(Location location) {
+        Intent intent = new Intent(this, FetchAddressService.class);
+        intent.putExtra(Constants.BUNDLE_LOCATION, location);
+        intent.putExtra(Constants.RECEIVER, mResultReceiver);
+        startService(intent);
     }
 
 }
