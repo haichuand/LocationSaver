@@ -1,4 +1,4 @@
-package com.example.android.locationsaver;
+package com.jasonduan.android.locationsaver;
 
 import android.content.ContentValues;
 import android.content.Intent;

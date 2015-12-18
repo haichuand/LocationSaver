@@ -1,4 +1,4 @@
-package com.example.android.locationsaver;
+package com.jasonduan.android.locationsaver;
 
 import android.os.Environment;
 
@@ -13,8 +13,7 @@ public final class Constants {
     public static final int LOCATION_FRAGMENT_POSITION = 0;
     public static final int LIST_FRAGMENT_POSITION = 1;
 
-    public static final String PACKAGE_NAME =
-            "com.example.android.locationsaver";
+    public static final String PACKAGE_NAME = "com.jasonduan.android.locationsaver";
 
     public static final String BUNDLE_LOCATION = PACKAGE_NAME + ".LOCATION";
     public static final String BUNDLE_DB_ROWID = PACKAGE_NAME + ".DB_ROWID";

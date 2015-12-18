@@ -1,4 +1,4 @@
-package com.example.android.locationsaver;
+package com.jasonduan.android.locationsaver;
 
 public class TabPagerItem {
 

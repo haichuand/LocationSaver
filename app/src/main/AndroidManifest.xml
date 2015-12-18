@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.locationsaver" >
+    package="com.jasonduan.android.locationsaver" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -25,7 +25,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.jasonduan.android.locationsaver.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -40,14 +40,14 @@
             android:value="AIzaSyDU7TYthgWHd-2k2nAh0MvU3TOApGMZtVg" />
 
         <activity
-            android:name=".EditEntryActivity"
+            android:name="com.jasonduan.android.locationsaver.EditEntryActivity"
             android:screenOrientation="portrait">
         </activity>
 
-        <receiver android:name=".LocationWidget">
+        <receiver android:name="com.jasonduan.android.locationsaver.LocationWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.android.locationsaver.LOCATIONSAVER_SERVICE" />
+                <action android:name="com.jasonduan.android.locationsaver.LOCATIONSAVER_SERVICE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -55,10 +55,10 @@
         </receiver>
 
         <service
-            android:name=".FetchAddressService"
+            android:name="com.jasonduan.android.locationsaver.FetchAddressService"
             android:exported="false" />
         <service
-            android:name=".LocationSaverService"
+            android:name="com.jasonduan.android.locationsaver.LocationSaverService"
             android:exported="false" />
     </application>
 

@@ -1,4 +1,4 @@
-package com.example.android.locationsaver;
+package com.jasonduan.android.locationsaver;
 
 import android.Manifest;
 import android.content.Intent;
@@ -48,6 +48,25 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //obtain necessary permissions for API level 23 and over (Marshmallow)
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA}, 0);
+        }
+
         setContentView(R.layout.activity_main);
 
         // Creating The Toolbar and setting it as the Toolbar for the activity
@@ -76,23 +95,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
             }
         }).run();
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        }
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA}, 0);
-        }
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -261,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
                 // Otherwise, set the URL to null.
                 Uri.parse("http://host/path"),
                 // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.example.android.locationsaver/http/host/path")
+                Uri.parse("android-app://com.jasonduan.android.locationsaver/http/host/path")
         );
         AppIndex.AppIndexApi.start(client, viewAction);
     }
@@ -280,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
                 // Otherwise, set the URL to null.
                 Uri.parse("http://host/path"),
                 // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.example.android.locationsaver/http/host/path")
+                Uri.parse("android-app://com.jasonduan.android.locationsaver/http/host/path")
         );
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();

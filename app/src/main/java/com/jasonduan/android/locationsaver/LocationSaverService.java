@@ -1,4 +1,4 @@
-package com.example.android.locationsaver;
+package com.jasonduan.android.locationsaver;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -47,7 +47,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
 
             if (resultCode == Constants.SUCCESS_RESULT) {
                 String addressText = resultData.getString(Constants.RESULT_DATA_KEY)
-                        .replace(System.getProperty("line.separator"), " ");
+                        .replace(System.getProperty("line.separator"), ", ");
                 String name = addLocationToDb(mLocation, addressText);
                 sendLocationSavedBroadcast(name, addressText);
             }
