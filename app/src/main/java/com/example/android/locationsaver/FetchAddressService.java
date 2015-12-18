@@ -16,11 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p/>
- *
- * helper methods.
+ * Service to get text address of a location from Geocoder class
  */
 public class FetchAddressService extends IntentService {
     private static final String TAG = "FetchAddressService";

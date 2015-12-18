@@ -6,9 +6,9 @@ import android.os.Environment;
  * Created by hduan on 10/14/2015.
  */
 public final class Constants {
-    public static final int SUCCESS_RESULT = 0;
+    public static final int SUCCESS_RESULT = 100;
 
-    public static final int FAILURE_RESULT = 1;
+    public static final int FAILURE_RESULT = 111;
 
     public static final int LOCATION_FRAGMENT_POSITION = 0;
     public static final int LIST_FRAGMENT_POSITION = 1;
