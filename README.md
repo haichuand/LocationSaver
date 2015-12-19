@@ -3,6 +3,7 @@ Location Saver is an Android app that allows users to conveniently save, edit an
 Location Saver works both with and without internet connection. When no connection is available, the app uses GPS to fix current location. The location can still be opened in offline mapping apps. Address text is not available without connection. <br>
 <h2>Installation</h2>
 Clone the git repository, open in Android Studio, build and run.
+To use the sample images for the locations, copy the /LocationSaverImages/ folder under the Pictures folder on phone's sdCard.
 <h2>Walkthrough</h2>
 On launching the app, the map screen will be shown with current user location at the center:
 ![map tab](Screenshots/Slide1.JPG?raw=true "map tab")<br><br>
