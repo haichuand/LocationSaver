@@ -36,14 +36,14 @@ import java.util.List;
 
 
 /**
- *
+ * Fragment to show Google Map and let user save current location
  */
-
 public class LocationFragment extends Fragment implements LocationListener, ConnectionCallbacks,
         OnConnectionFailedListener {
     //location update interval in milliseconds
     private static final int UPDATE_INTERVAL=3000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
+
     //default zooms to street level
     private final float DEFAULT_MAP_ZOOM=18;
     private final String TAG = "LocationFragment";
@@ -53,12 +53,13 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     private Location mCurrentLocation;
     private SupportMapFragment mMapFragment;
     private GoogleMap mMap;
-    boolean mMoveCameraToCurrentLocation;
-    //    private MainActivity mActivity;
+    boolean mMoveCameraToCurrentLocation; //if we want to move map view to current location
     private TextView mAccuracyView;
+    private String accuracyString1, accuracyString2;
     private int mAccuracy; //accuracy of current location
     private ActionMode mActionMode;
 
+    /* ActionMode menu to let user remove markers from map*/
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -109,7 +110,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createLocationRequest();
-        mMoveCameraToCurrentLocation = true;
+        mMoveCameraToCurrentLocation = true; //set to true when fragment is first created
+        accuracyString1 = getString(R.string.text_accuracy_string1);
+        accuracyString2 = getString(R.string.text_accuracy_string2);
     }
 
     @Override
@@ -155,6 +158,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         super.onPause();
     }
 
+    /**
+     * Disconnects Google API Client to save power
+     */
     @Override
     public void onStop() {
         if (mGoogleApiClient!= null)
@@ -162,6 +168,10 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         super.onStop();
     }
 
+    /**
+     * Build Google API Client for use to get current location
+     * @param context
+     */
     private synchronized void buildGoogleApiClient(Context context) {
             mGoogleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(this)
@@ -171,6 +181,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
 
     }
 
+    /**
+     * Set location request parameters
+     */
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(UPDATE_INTERVAL);
@@ -200,12 +213,19 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
+    /**
+     * Start location update when Google API Client is connected
+     * @param bundle
+     */
     @Override
     public void onConnected(Bundle bundle) {
             startLocationUpdates();
     }
 
-
+    /**
+     * Reconnects Google API Client when connection is suspended
+     * @param i
+     */
     @Override
     public void onConnectionSuspended(int i) {
         Log.d(TAG, "GoogleApiClient connection suspended");
@@ -217,19 +237,29 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         Log.d(TAG, "GoogleApiClient connection failed");
     }
 
+    /**
+     * Call back from Goolge API Client whenever the location is changed
+     * @param location Current location
+     */
     @Override
     public void onLocationChanged(Location location) {
         Log.d(TAG, "onLocationChanged() called");
         mCurrentLocation = location;
+        //convert accuracy from meters to feet
         mAccuracy = (int) Math.round(mCurrentLocation.getAccuracy()/0.3045);
-        mAccuracyView.setText("Accuracy: " + mAccuracy + " feet");
+        mAccuracyView.setText(accuracyString1 + " " + mAccuracy + " " + accuracyString2);
+
+        //moves camera to current location only once, so that when user navigates back, the previous
+        //view is kept
         if (mMoveCameraToCurrentLocation) {
             moveMapCamera();
             mMoveCameraToCurrentLocation = false;
         }
     }
 
-
+    /**
+     * Move map view to current location and set zoom level to default zoom
+     */
     private void moveMapCamera() {
         if (mCurrentLocation!= null) {
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
@@ -239,6 +269,9 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         }
     }
 
+    /**
+     * Launches EditEntryActivity to edit and save current location
+     */
     public void saveCurrentLocation() {
         Intent intent = new Intent(getContext(), EditEntryActivity.class);
         intent.putExtra(Constants.SOURCE, Constants.LOCATION_FRAGMENT);
@@ -246,6 +279,11 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         getActivity().startActivityForResult(intent, Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE);
     }
 
+    /**
+     * Show a list of markers on Google Map by automatically setting the necessary zoom level.
+     * If there is only one marker in the list, set the zoom level to default
+     * @param markers Markers to show on the map
+     */
     public void showMarkers(List<MarkerOptions> markers) {
         CameraUpdate cu;
         if (markers.size()==0) {
@@ -272,12 +310,5 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         mMap.animateCamera(cu);
         mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
     }
-
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        mMap = googleMap;
-//        mMap.setMyLocationEnabled(true);
-//    }
 
 }

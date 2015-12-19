@@ -12,6 +12,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Adapter for tab pager
+ */
 public class TabPagerAdapter extends FragmentPagerAdapter {
 
     private Context context;

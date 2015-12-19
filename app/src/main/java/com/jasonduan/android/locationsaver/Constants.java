@@ -3,7 +3,7 @@ package com.jasonduan.android.locationsaver;
 import android.os.Environment;
 
 /**
- * Created by hduan on 10/14/2015.
+ * Constants used in the app
  */
 public final class Constants {
     public static final int SUCCESS_RESULT = 100;

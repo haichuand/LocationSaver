@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -29,12 +28,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.location.LocationServices;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -44,34 +37,37 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class EditEntryActivity extends AppCompatActivity implements
-        ConnectionCallbacks, OnConnectionFailedListener {
-    private static final String TAG = "EditEntryActivity"; //tag for logging
-    //tags to indicate if imageView is icon or image
+/**
+ * Activity for edit details of a location entry. It can be launched by the floating action button
+ * in LocationFragment or clicking the location item image in ListFragment
+ */
+public class EditEntryActivity extends AppCompatActivity {
+
+    private static final String TAG = "EditEntryActivity";
+    /* tags to indicate if imageView is icon or image */
     private static final int ICON_VIEW = 101;
     private static final int IMAGE_VIEW = 202;
+
     private EditText mNameView, mCoordView, mNoteView, mAddressView;
     private ImageView mImageView;
     private Location mLocation;
-    //flag to indicate if we want to get address through FetchAddressService
-    private boolean isGetAddress;
+    private boolean isGetAddress; //flag to indicate if we want to get address through FetchAddressService
     private View.OnClickListener mImageClickListener;
-    protected GoogleApiClient mGoogleApiClient;
+//    protected GoogleApiClient mGoogleApiClient;
     private boolean mDeleteImageFlag;
-    /*Receiver registered with this activity to get the response from FetchAddressIntentService.*/
+    /* Receiver registered with this activity to get the response from FetchAddressIntentService.*/
     private ResultReceiver mResultReceiver;
-    //image file saved from camera app
-    private String mSaveImagePath, mThumbnailImagePath;
+
+    private String mSaveImagePath, mThumbnailImagePath; //image file paths saved from camera app
     private double mLongitude, mLatitude;
     private Handler mHandler;
-
     private LocationDBHandler mDbHandler;
     long mRowId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        buildGoogleApiClient();
+//        buildGoogleApiClient();
         setContentView(R.layout.activity_edit_entry);
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
@@ -88,9 +84,9 @@ public class EditEntryActivity extends AppCompatActivity implements
         mImageView = (ImageView) findViewById(R.id.entry_image);
         //make the name field select all on click for easier editing
         mHandler = new Handler();
-        mResultReceiver = new ResultReceiver(mHandler) {
 
-            /* Receives data sent from FetchAddressService and updates the address field.*/
+        /* mResultReceiver receives data sent from FetchAddressService and updates the address field.*/
+        mResultReceiver = new ResultReceiver(mHandler) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
 
@@ -116,6 +112,7 @@ public class EditEntryActivity extends AppCompatActivity implements
 
         };
 
+        /* Listener to animate click on image or text */
         mImageClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -124,6 +121,7 @@ public class EditEntryActivity extends AppCompatActivity implements
             }
         };
 
+        //to prevent keyboard from appearing when activity is first launched
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
     }
@@ -131,7 +129,7 @@ public class EditEntryActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+//        mGoogleApiClient.connect();
     }
 
     @Override
@@ -141,10 +139,10 @@ public class EditEntryActivity extends AppCompatActivity implements
         mDbHandler = new LocationDBHandler(this);
         Intent intent = getIntent();
         if (intent == null) return;
+
+        //get where the activity is launched from (LocationFragment, ListFragment or Widget)
         String source = intent.getStringExtra(Constants.SOURCE);
-        if (source == null) {
-            return;
-        }
+        if (source == null) return;
 
         //intent is coming from LocationFragment to save location
         if (source.equals(Constants.LOCATION_FRAGMENT)) {
@@ -178,9 +176,7 @@ public class EditEntryActivity extends AppCompatActivity implements
                 mNoteView.setText(cursor.getString(LocationDBHandler.NOTE));
                 mThumbnailImagePath = cursor.getString(LocationDBHandler.IMAGE);
 
-
                 if (mThumbnailImagePath != null) {
-
                     //if full size image is present, set ImageView to use full size image; otherwise use thumbnail image
                     int suffixIndex = mThumbnailImagePath.lastIndexOf("_tn.");
                     String fullSizeImagePath = "";
@@ -211,21 +207,28 @@ public class EditEntryActivity extends AppCompatActivity implements
             }
         }
 
+        /* set different image sizes for icon and user image */
         ViewGroup.LayoutParams params = mImageView.getLayoutParams();
+        //convert dp to actual pixels
         final float scale = getResources().getDisplayMetrics().density;
         switch ((int) mImageView.getTag()) {
             case ICON_VIEW:
-                params.width = params.height = (int) (80 * scale);
+                params.width = params.height = (int) (80 * scale); //80 dp
                 break;
             case IMAGE_VIEW:
                 params.width = ViewGroup.LayoutParams.MATCH_PARENT;
                 params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                mImageView.setMaxWidth((int) (430 * scale));
-                mImageView.setMaxHeight((int) (240 * scale));
+                mImageView.setMaxWidth((int) (430 * scale)); //430 dp
+                mImageView.setMaxHeight((int) (240 * scale)); //240 dp
                 break;
         }
-        intent.removeExtra(Constants.SOURCE);
 
+        if (isGetAddress) {
+            getAddress();
+        }
+
+        //clear the intent source code
+        intent.removeExtra(Constants.SOURCE);
     }
 
     @Override
@@ -234,13 +237,13 @@ public class EditEntryActivity extends AppCompatActivity implements
         super.onPause();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
-    }
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+//            mGoogleApiClient.disconnect();
+//        }
+//    }
 
     @Override
     protected void onSaveInstanceState(Bundle instanceState) {
@@ -275,17 +278,18 @@ public class EditEntryActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(menuItem);
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
+//    protected synchronized void buildGoogleApiClient() {
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(LocationServices.API)
+//                .build();
+//    }
 
+    /**
+     * Start the phone's camera app through intent and return the image to  this activity
+     */
     private void startCameraForImage() {
-        // create Intent to take a picture and return control to the calling application
-
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         String currentDateTime = sdf.format(new Date());
         mSaveImagePath = Constants.IMAGE_DIRECTORY + currentDateTime + ".jpg";
@@ -304,9 +308,15 @@ public class EditEntryActivity extends AppCompatActivity implements
         startActivityForResult(intent, Constants.CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
     }
 
+    /**
+     * Receives result code from the camera app. If the result code is ok, starts AsyncTask to
+     * resize the image.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        Log.d("EditEntryActivity", "onActivityResult called");
         if (requestCode == Constants.CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             new makeThumbnailTask(mImageView).execute(mSaveImagePath);
         }
@@ -316,28 +326,30 @@ public class EditEntryActivity extends AppCompatActivity implements
     /**
      * Runs when a GoogleApiClient object successfully connects.
      */
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        if (!Geocoder.isPresent()) {
-            Toast.makeText(this, R.string.no_geocoder_available, Toast.LENGTH_LONG).show();
-            return;
-        }
+//    @Override
+//    public void onConnected(Bundle connectionHint) {
+//        if (!Geocoder.isPresent()) {
+//            Toast.makeText(this, R.string.no_geocoder_available, Toast.LENGTH_LONG).show();
+//            return;
+//        }
+//
+//        if (isGetAddress)
+//            getAddress();
+//    }
 
-        if (isGetAddress)
-            getAddress();
-    }
+//    @Override
+//    public void onConnectionSuspended(int i) {
+//
+//    }
+//
+//    @Override
+//    public void onConnectionFailed(ConnectionResult connectionResult) {
+//
+//    }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
-
-    //get text representation of address in mLocation
+    /**
+     * Launches FetchAddressService through intent to get text representation of address in mLocation
+     */
     private void getAddress() {
         Intent intent = new Intent(this, FetchAddressService.class);
         intent.putExtra(Constants.BUNDLE_LOCATION, mLocation);
@@ -345,7 +357,9 @@ public class EditEntryActivity extends AppCompatActivity implements
         startService(intent);
     }
 
-    //sets mLocation from the EditText field of Coords
+    /**
+     * sets mLocation from the EditText field of Coords
+     */
     private void setLocationFromEdiText() {
         String[] coords = mCoordView.getText().toString().split(",");
         if (coords.length == 2) {
@@ -364,6 +378,9 @@ public class EditEntryActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Called when user cancels the EditEntryActivity. Deletes images on exit.
+     */
     private void cancelActivity() {
         if (mDeleteImageFlag) {
             deleteImages();
@@ -371,8 +388,12 @@ public class EditEntryActivity extends AppCompatActivity implements
         this.finish();
     }
 
+    /**
+     * Save the current location in database
+     */
     private void saveLocation() {
-        //if the activity is launched through clicking an entry in ListFragment, rowId will be set
+        /* if the activity is launched through clicking an entry in ListFragment, rowId will be set
+         * Otherwise the mRowId will be -1 */
         if (mRowId == -1) {
             CharSequence nameText = mNameView.getText();
             if (TextUtils.isEmpty(nameText)) {
@@ -410,6 +431,9 @@ public class EditEntryActivity extends AppCompatActivity implements
         finish();
     }
 
+    /**
+     * Deletes both the thumbnail image and the bigger image
+     */
     private void deleteImages() {
         File file;
         if (mThumbnailImagePath != null && !mThumbnailImagePath.isEmpty()) {
@@ -424,6 +448,12 @@ public class EditEntryActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * AsyncTask to resize images taken by camera app. Because the images from camera app often has
+     * much higher resolution than is needed for the app, they are resized for faster loading and
+     * display. Two image sizes are generated: one with max dimension of 1920 pixels (for display
+     * in EditEntryActivity and one with max dimension of 480 (for display in ListFragment).
+     */
     class makeThumbnailTask extends AsyncTask<String, Void, String> {
         private final WeakReference<ImageView> imageViewReference;
 
@@ -446,11 +476,15 @@ public class EditEntryActivity extends AppCompatActivity implements
                 BitmapFactory.decodeFile(imagePath, options);
                 double maxDim = (options.outWidth > options.outHeight ? options.outWidth : options.outHeight);
                 int inSampleSize;
+                //try to determine the correct inSampleSize for the image
                 for (inSampleSize = 1; maxDim / inSampleSize / maxSize >= 2.0; inSampleSize *= 2) ;
 
                 options.inSampleSize = inSampleSize;
                 options.inJustDecodeBounds = false;
                 originalBitmap = BitmapFactory.decodeFile(imagePath, options);
+
+                //The image could be incorrectly oriented depending on the orientation of the phone when
+                //the image is taken. We use a utility method to re-orient the image
                 orientedBitmap = ImageUtils.rotateBitmap(imagePath, originalBitmap);
             } catch (Exception e) {
                 Log.d("EditEntryActivity", "Error decoding bitmap " + imagePath);
@@ -519,7 +553,6 @@ public class EditEntryActivity extends AppCompatActivity implements
                 return;
             }
             if (imagePath == null || imagePath.isEmpty()) {
-                //deleteImages();
                 imageView.setImageResource(R.drawable.icon_camera);
                 imageView.setOnClickListener(mImageClickListener);
                 return;
@@ -534,6 +567,4 @@ public class EditEntryActivity extends AppCompatActivity implements
             mImageView.setTag(IMAGE_VIEW);
         }
     }
-
-
 }

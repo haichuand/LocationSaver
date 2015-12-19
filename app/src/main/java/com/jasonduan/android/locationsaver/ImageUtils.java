@@ -7,10 +7,16 @@ import android.media.ExifInterface;
 import java.io.IOException;
 
 /**
- * Created by hduan on 11/11/2015.
+ * Class with static methods for manipulating images
  */
 public class ImageUtils {
 
+    /**
+     * Rotate an image bitmap to the correct orientation based on the image exif data
+     * @param src Path of source image
+     * @param bitmap bitmap of source image
+     * @return the rotated image bitmap
+     */
     public static Bitmap rotateBitmap(String src, Bitmap bitmap) {
         int orientation = 1;
 
@@ -67,21 +73,5 @@ public class ImageUtils {
 
         return bitmap;
     }
-
-//    public static void saveResourceImageToSdCard (Context context, int resourceId, String imagePath) {
-//        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId);
-//        File imageFile = new File(imagePath);
-//        try {
-//            FileOutputStream out = new FileOutputStream(imageFile);
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-//            out.flush();
-//            out.close();
-//
-//        } catch (FileNotFoundException e) {
-//            Log.d("ImageUtils", "FileNotFound Exception on " + imagePath);
-//        } catch (IOException e) {
-//            Log.d("ImageUtils", "IO Exception on " + imagePath);
-//        }
-//    }
 
 }

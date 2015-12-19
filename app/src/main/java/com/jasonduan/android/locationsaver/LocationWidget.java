@@ -13,7 +13,7 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 /**
- * Created by hduan on 11/19/2015.
+ * Widget to provide one-click saving of current location
  */
 public class LocationWidget extends AppWidgetProvider {
 
@@ -25,8 +25,6 @@ public class LocationWidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-//        final Context context1 = context;
-
         final int N = appWidgetIds.length;
 
         // Perform this loop procedure for each App Widget that belongs to this provider
@@ -44,29 +42,10 @@ public class LocationWidget extends AppWidgetProvider {
              * overwritten!!
              */
             PendingIntent showLocationIntent = PendingIntent.getService(context, 1, serviceIntent1, PendingIntent.FLAG_UPDATE_CURRENT);
-
             rv.setOnClickPendingIntent(R.id.widget_location_text, showLocationIntent);
-//            if (noSavedLocation) {
-//                rv.setTextViewText(R.id.widget_location_name, context.getString(R.string.no_saved_location));
-//                rv.setTextViewText(R.id.widget_location_coord, context.getString(R.string.press_save_button_hint));
-//            }
-
-//            rv.setOnClickPendingIntent(R.id.widget_location_name, showLocationIntent);
-//            rv.setOnClickPendingIntent(R.id.widget_location_coord, showLocationIntent);
-
-
-            // Create an Intent to launch LocationSaverService
-
 
             // Tell the AppWidgetManager to perform an update on the current app widget
             appWidgetManager.updateAppWidget(appWidgetId, rv);
-
-//            handler.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    Toast.makeText(context1, "widget updated", Toast.LENGTH_SHORT).show();
-//                }
-//            });
         }
 
 
@@ -85,6 +64,9 @@ public class LocationWidget extends AppWidgetProvider {
             rv = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         }
 
+        //whenever an update or disable of the widget is performed by the system, we need to check the
+        // boolean value from SharedPreferences to see if "No location Saved" text should be displayed or not
+        //ACTION_APPWIDGET_UPDATE is also invoked when a new widget is added to desktop
         switch (action) {
             case AppWidgetManager.ACTION_APPWIDGET_UPDATE:
                 SharedPreferences preferences = context.getSharedPreferences(Constants.SHAREDPREFERENCE, Context.MODE_PRIVATE);
@@ -94,12 +76,12 @@ public class LocationWidget extends AppWidgetProvider {
                     rv.setTextViewText(R.id.widget_location_description, context.getString(R.string.press_save_button_hint));
                 }
                 break;
-            case AppWidgetManager.ACTION_APPWIDGET_DISABLED:
+            case AppWidgetManager.ACTION_APPWIDGET_DISABLED: //invoked when a widget is deleted
                 updateSharedPreferences(context, true);
                 break;
         }
 
-
+        //set the text display of the widget depending on values from the broadcast intent
         int source = intent.getIntExtra(Constants.SOURCE, -1);
         switch (source) {
             case Constants.LOCATION_IN_PROGRESS:
@@ -136,6 +118,12 @@ public class LocationWidget extends AppWidgetProvider {
         AppWidgetManager.getInstance(context).updateAppWidget(widget, rv);
     }
 
+    /**
+     * Update SharedPreferences to set the boolean value to indicate whether "No location saved"
+     * should be displayed on the widget
+     * @param context Current context
+     * @param noLocationSaved If "No location saved" should be displayed on th widget
+     */
     private void updateSharedPreferences(Context context, boolean noLocationSaved) {
         SharedPreferences preferences = context.getSharedPreferences(Constants.SHAREDPREFERENCE, Context.MODE_PRIVATE);
         preferences.edit().putBoolean(Constants.NO_LOCATION_SAVED, noLocationSaved).commit();

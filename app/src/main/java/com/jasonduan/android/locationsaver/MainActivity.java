@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -26,11 +27,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.io.File;
 import java.util.List;
 
+/**
+ * Main activity of the app
+ */
 public class MainActivity extends AppCompatActivity implements ListFragment.ListFragmentCallback,
         ViewPager.OnPageChangeListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final float TAB_ALPHA_SELECTED = 1.0f;
     private static final float TAB_ALPHA_UNSELECTED = 0.5f;
+    private static final int LOCATION_PERMISSION = 15;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -49,31 +54,18 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //obtain necessary permissions for API level 23 and over (Marshmallow)
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA}, 0);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+             Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, LOCATION_PERMISSION);
         }
 
         setContentView(R.layout.activity_main);
 
         // Creating The Toolbar and setting it as the Toolbar for the activity
-
         mToolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(mToolbar);
-
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -88,14 +80,6 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         mViewPager.addOnPageChangeListener(this);
         setTabLayoutViewPager(mViewPager);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                makeImageDirectory();
-            }
-        }).run();
-
-
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -107,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         Intent intent = getIntent();
         if (intent != null) {
             String fragmentToShow = intent.getStringExtra(Constants.SOURCE);
-//            Toast.makeText(this, "fragemtnToShow="+fragmentToShow, Toast.LENGTH_LONG).show();
             if (fragmentToShow != null && fragmentToShow.equals(Constants.LIST_FRAGMENT)) {
                 ListFragment listFragment = (ListFragment) findCurrentFragment(1);
                 if (listFragment != null) {
@@ -148,10 +131,6 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
             listFragment.onListItemChanged();
         }
     }
-
-//    private Fragment findCurrentFragment(int position) {
-//        return getFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
-//    }
 
     @Override
     public void showMarkersOnMap(List<MarkerOptions> markers) {
@@ -220,15 +199,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-//                if (tab.getPosition() == position) {
-//                    TabPagerAdapter adapter = (TabPagerAdapter) viewPager.getAdapter();
-//                    Fragment fragment = adapter.getItem(tab.getPosition());
 
-//                    if (fragment instanceof ScrollableInterface) {
-//                        ScrollableInterface scrollable = (ScrollableInterface) fragment;
-//                        scrollable.scrollToTop();
-//                    }
-//                }
             }
         });
 
@@ -244,6 +215,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         }
     }
 
+    /**
+     * Find the current fragment at designated position
+     * @param position The position of the fragment
+     * @return The fragment at specified position
+     */
     private Fragment findCurrentFragment(int position) {
         return getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":" + position);
 
@@ -291,14 +267,27 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        boolean permissionsGranted = true; //if all permissions are granted
+        int writeExternalStorageIndex = -1; //index of WRITE_EXTERNAL_STORAGE permission
 
-        if (grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, R.string.must_have_permission, Toast.LENGTH_LONG).show();
-            System.exit(0);
+        for (int i=0; i<grantResults.length; i++) {
+            if (permissions[i].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                writeExternalStorageIndex = i;
+            if (grantResults[i] == PackageManager.PERMISSION_DENIED)
+                permissionsGranted = false;
+        }
+        if (!permissionsGranted) {
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, R.string.must_have_permission, Toast.LENGTH_LONG).show();
+                }
+            });
+            finish();
         }
 
-        makeImageDirectory();
+        if (writeExternalStorageIndex > 0) {
+            makeImageDirectory();
+        }
     }
-
-
 }

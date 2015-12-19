@@ -30,9 +30,8 @@ public class FetchAddressService extends IntentService {
     /**
      * Tries to get the location address using a Geocoder. If successful, sends an address to a
      * result receiver. If unsuccessful, sends an error message instead.
-     * Note: We define a {@link android.os.ResultReceiver} in * MainActivity to process content
+     * Note: Need to define a {@link android.os.ResultReceiver} in calling activity to process content
      * sent from this service.
-     *
      * This service calls this method from the default worker thread with the intent that started
      * the service. When this method returns, the service automatically stops.
      */
@@ -60,7 +59,7 @@ public class FetchAddressService extends IntentService {
             return;
         }
 
-        // Errors could still arise from using the Geocoder (for jasonduan, if there is no
+        // Errors could still arise from using the Geocoder (for example, if there is no
         // connectivity, or if the Geocoder is given illegal location data). Or, the Geocoder may
         // simply not have an address for a location. In all these cases, we communicate with the
         // receiver using a resultCode indicating failure. If an address is found, we use a
@@ -107,11 +106,11 @@ public class FetchAddressService extends IntentService {
             // join them, and send them to the thread. The {@link android.location.address}
             // class provides other options for fetching address details that you may prefer
             // to use. Here are some examples:
-            // getLocality() ("Mountain View", for jasonduan)
-            // getAdminArea() ("CA", for jasonduan)
-            // getPostalCode() ("94043", for jasonduan)
-            // getCountryCode() ("US", for jasonduan)
-            // getCountryName() ("United States", for jasonduan)
+            // getLocality() ("Mountain View", for example)
+            // getAdminArea() ("CA", for example)
+            // getPostalCode() ("94043", for example)
+            // getCountryCode() ("US", for example)
+            // getCountryName() ("United States", for example)
             for(int i = 0; i < address.getMaxAddressLineIndex(); i++) {
                 addressFragments.add(address.getAddressLine(i));
             }

@@ -19,7 +19,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /**
- *
+ * Service to handle widget clicks
  */
 public class LocationSaverService extends IntentService implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener{
@@ -28,7 +28,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
     private static final long UPDATE_INTERVAL=1000L; //update interval of location request, Unit: ms
     private static final float accuracyThreshold = 20; //threshold of accuracy to save current location, Unit: meters
     private static final long timeoutThreshold = 60000L; //threshold of time out to stop service, Unit: ms
-    private long timeoutMilliseconds;
+    private long timeoutCounter; //counter for time spent in the service
     private Handler handler;
 
     private GoogleApiClient googleApiClient;
@@ -37,7 +37,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
 
     ResultReceiver mResultReceiver = new ResultReceiver(handler) {
 
-        /* Receives data sent from FetchAddressService and updates the address field.*/
+        /* Receives data sent from FetchAddressService and updates the address text.*/
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             if (mLocation == null) {
@@ -45,6 +45,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
                 return;
             }
 
+            //sets the address field depending on if address text is obtained from FetchAddressService
             if (resultCode == Constants.SUCCESS_RESULT) {
                 String addressText = resultData.getString(Constants.RESULT_DATA_KEY)
                         .replace(System.getProperty("line.separator"), ", ");
@@ -72,21 +73,26 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         handler = new Handler();
     }
 
+    /**
+     * Intents from the widget are handled here
+     * @param intent
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
-        timeoutMilliseconds = System.currentTimeMillis();
+        //sets the timeout counter when a new intent is received
+        timeoutCounter = System.currentTimeMillis();
 
         if (intent != null) {
             String source = intent.getStringExtra(Constants.SOURCE);
             if (source != null) {
                 switch(source) {
-                    case Constants.LOCATION_WIDGET_ADD_BUTTON:
+                    case Constants.LOCATION_WIDGET_ADD_BUTTON: //get current location and save to db
                         Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
                         broadcastIntent.putExtra(Constants.SOURCE, Constants.LOCATION_IN_PROGRESS);
                         sendBroadcast(broadcastIntent);
                         saveCurrentLocation();
                         break;
-                    case Constants.LOCATION_WIDGET_SHOW_LOCATION:
+                    case Constants.LOCATION_WIDGET_SHOW_LOCATION: //opens ListFragment in app to show location
                         Intent mainActivityIntent = new Intent(this, MainActivity.class);
                         mainActivityIntent.putExtra(Constants.SOURCE, Constants.LIST_FRAGMENT);
                         mainActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -100,6 +106,9 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         }
     }
 
+    /**
+     * Create location request and connects with Google API Client
+     */
     private void saveCurrentLocation() {
         //creates location request if it is null
         if (locationRequest == null) {
@@ -140,14 +149,13 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
                 Toast.makeText(LocationSaverService.this, R.string.googleapiclient_connection_failed, Toast.LENGTH_LONG).show();
             }
         });
-//        this.stopSelf();
     }
 
     @Override
     public void onLocationChanged(Location location) {
 
         //if timeout period passes without getting into required accuracy, broadcast failed message
-        if (System.currentTimeMillis() - timeoutMilliseconds > timeoutThreshold) {
+        if (System.currentTimeMillis() - timeoutCounter > timeoutThreshold) {
             Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
             broadcastIntent.putExtra(Constants.SOURCE, Constants.LOCATION_INACCURATE);
             sendBroadcast(broadcastIntent);
@@ -162,6 +170,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
             googleApiClient.disconnect();
         }
 
+        //saves the location to database when the accuracy is lower than the threshold
         float accuracy = location.getAccuracy();
         if (accuracy <= accuracyThreshold) {
             mLocation = location;
@@ -171,6 +180,12 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         }
     }
 
+    /**
+     * Add a location item to database
+     * @param location The location to be saved to database
+     * @param address The address field of the location item
+     * @return Name of the saved location, which is the current date and time
+     */
     private String addLocationToDb(Location location, String address) {
         String name = DateFormat.getDateTimeInstance().format(new Date());
         double latitude = location.getLatitude();
@@ -182,9 +197,10 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
     }
 
     /**
-     * Send broadcast to widget
-     * @param name
-     * @param description
+     * Send broadcast to widget when the location is successfully saved
+     * @param name The name of the location to be displayed
+     * @param description The description of the location, which can be address text (if it can be obtained)
+     *                    or coordinates of the location
      */
     private void sendLocationSavedBroadcast(String name, String description) {
         Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
@@ -194,7 +210,10 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         sendBroadcast(broadcastIntent);
     }
 
-    //get text representation of address in mLocation
+    /**
+     * Launch FetchAddressService to get address text of a location
+     * @param location The location to get address text
+     */
     private void getAddress(Location location) {
         Intent intent = new Intent(this, FetchAddressService.class);
         intent.putExtra(Constants.BUNDLE_LOCATION, location);

@@ -11,12 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Fudou on 10/7/2015.
+ * Database handler for saved locations in the app
  */
 public class LocationDBHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "LocationSaverDB";
 
+    //columns in the database
     public static final int _ID = 0;
     public static final int NAME = 1;
     public static final int LATITUDE = 2;
@@ -30,6 +31,10 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    /**
+     * Create the database schema
+     * @param sqLiteDatabase
+     */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         final String SQL_CREATE_TABLE = "CREATE TABLE " + LocationEntry.TABLE + "(" +
@@ -46,6 +51,11 @@ public class LocationDBHandler extends SQLiteOpenHelper {
 
     }
 
+    /**
+     * Insert a location into the database
+     * @param location The location to be inserted
+     * @return The rowId of the inserted location
+     */
     public long insertLocation(LocationItem location) {
         long rowId = -1;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -64,6 +74,11 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         return rowId;
     }
 
+    /**
+     * Bulk insert a list of locations into the database
+     * @param locations The location list containing location items
+     * @return The number of rows inserted
+     */
     public int insertLocations (List<LocationItem> locations) {
         int rowsInserted = 0;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -86,6 +101,10 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         return rowsInserted;
     }
 
+    /**
+     * Select all rows in the location database
+     * @return Cursor to all rows
+     */
     public Cursor selectAllRows() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + LocationDBHandler.LocationEntry.TABLE
@@ -93,12 +112,14 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         return cursor;
     }
 
-
+    /**
+     * Insert sample locations into the database for testing
+     */
     public void insertTestRows() {
         LocationItem loc1, loc2, loc3, loc4, loc5, loc6, loc7, loc8;
         String sdPath = Constants.IMAGE_DIRECTORY;
         loc1 = new LocationItem("Seattle Waterfront", 47.607795, -122.342424, "Alaskan Way & Pike St, Seattle, WA 98001, USA", "The most beautiful waterfront!", sdPath+"1_tn.jpg", 1407004217000L);
-        loc2 = new LocationItem("McWay Waterfall", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful watefall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
+        loc2 = new LocationItem("McWay Waterfall", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful waterfall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
         loc3 = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "Presidio, San Francisco, CA", "Beach by Golden Gate Bridge", sdPath+"3_tn.jpg", 1422469635000L);
         loc4 = new LocationItem("Yosemite Falls", 37.747565, -119.596386, "", "Iconic falls in Yosemite Valley", sdPath+"4_tn.jpg", 1432486111000L);
         loc5 = new LocationItem("Delicate Arch", 38.743650, -109.499252, "", "Beautiful sandstone arch in the high desert of Utah", sdPath+"5_tn.jpg", 1372964485000L);
@@ -117,6 +138,9 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         insertLocations(list);
     }
 
+    /**
+     * Columns in the database
+     */
     public class LocationEntry implements BaseColumns {
 
         public static final String TABLE = "location";

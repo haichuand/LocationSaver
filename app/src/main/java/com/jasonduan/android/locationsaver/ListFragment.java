@@ -23,16 +23,22 @@ import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Fragment to show all saved locations in a list. It uses RecyclerView with an adapter.
+ */
 public class ListFragment extends Fragment implements LocationListAdapter.LocationListListener {
 
     LocationDBHandler mDbHandler;
     private LocationListAdapter mAdapter;
     private Cursor mCursor;
     private ActionMode mActionMode;
+
+    /* ActionBar activated by long pressing a location item to enter into multi-select mode */
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -86,19 +92,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDbHandler = new LocationDBHandler(getActivity());
-//        SQLiteDatabase db = mDbHandler.getWritableDatabase();
-//        db.delete(LocationDBHandler.LocationEntry.TABLE, null, null);
-//        db.close();
-//        mDbHandler.insertTestRows();
         mCursor = mDbHandler.selectAllRows();
-//        if (!mCursor.moveToFirst()) {
-//            if (ContextCompat.checkSelfPermission(getActivity(),
-//                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-//                mDbHandler.insertTestRows();
-//                copyTestRowImagesFromResource();
-//                mCursor = mDbHandler.selectAllRows();
-//            }
-//        }
         setHasOptionsMenu(true);
     }
 
@@ -112,10 +106,19 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         locationListView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mAdapter = new LocationListAdapter(mCursor, this);
         locationListView.setAdapter(mAdapter);
-//        mAdapter.notifyDataSetChanged();
+
+        //insert test locations if the list is empty
+        if (!mCursor.moveToFirst()) {
+            mDbHandler.insertTestRows();
+            onListItemChanged();
+        }
+
         return v;
     }
 
+    /**
+     * Launch EditEntryActivity to edit location item
+     */
     private void editLocationItem() {
         int numSelected = mAdapter.mSelectedItemList.size();
         if (numSelected != 1) {
@@ -133,6 +136,9 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         }
     }
 
+    /**
+     * Prompt the user to confirm deletion of location items(s)
+     */
     private void promptToDeleteLocationItems() {
         int itemsSelected = mAdapter.mSelectedItemList.size();
         if (itemsSelected > 0) {
@@ -172,8 +178,11 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         }
     }
 
+    /**
+     * Show selected location(s) on Google Map in LocationFragment
+     */
     private void showLocationsOnMap() {
-        ArrayList<MarkerOptions> markerList= new ArrayList<>();
+        ArrayList<MarkerOptions> markerList = new ArrayList<>();
         for (int selectedItem : mAdapter.mSelectedItemList) {
             mCursor.moveToPosition(selectedItem);
             MarkerOptions newMarker = new MarkerOptions()
@@ -182,16 +191,35 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
                     .snippet(mCursor.getString(LocationDBHandler.NOTE));
             markerList.add(newMarker);
         }
-        MainActivity mainActivity = (MainActivity) getActivity();
+        ListFragmentCallback mainActivity = (ListFragmentCallback) getActivity();
         mainActivity.showMarkersOnMap(markerList);
     }
 
+    /**
+     * Delete selected location items and associated images
+     */
     private void deleteLocationItems() {
         SQLiteDatabase db = mDbHandler.getWritableDatabase();
         long rowId;
 
         for (Iterator<Integer> it = mAdapter.mSelectedItemList.iterator(); it.hasNext(); ) {
             mCursor.moveToPosition(it.next());
+            /* delete images associated with the location item*/
+            String imagePath = mCursor.getString(LocationDBHandler.IMAGE);
+            File imageFile;
+            if (imagePath != null) {
+                imageFile = new File(imagePath);
+                //first delete thumbnail image, then delete full size image
+                if (imageFile.delete()) {
+                    int suffixIndex = imagePath.lastIndexOf("_tn.");
+                    String fullSizeImagePath = "";
+                    if (suffixIndex > 0) {
+                        fullSizeImagePath = imagePath.substring(0, suffixIndex) + imagePath.substring(suffixIndex + 3);
+                        imageFile = new File(fullSizeImagePath);
+                        imageFile.delete();
+                    }
+                }
+            }
             rowId = mCursor.getLong(LocationDBHandler._ID);
             db.delete(LocationDBHandler.LocationEntry.TABLE,
                     LocationDBHandler.LocationEntry._ID + "=" + rowId, null);
@@ -199,7 +227,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
         mAdapter.mSelectedItemList.clear();
         onListItemChanged();
-        if(mActionMode != null) {
+        if (mActionMode != null) {
             mActionMode.finish();
         }
     }
@@ -214,6 +242,10 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         super.onPause();
     }
 
+    /**
+     * Perform actions depending on the source of user click from ListFragment
+     * @param clickSource Source of user click
+     */
     @Override
     public void onListItemClicked(int clickSource) {
         switch (clickSource) {
@@ -241,7 +273,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
             case Constants.CLICK_SELECTION_COUNT_CHANGED:
                 int selectionCount = mAdapter.mSelectedItemList.size();
                 if (mActionMode != null) {
-                    mActionMode.setTitle(selectionCount>0 ? ""+selectionCount : "");
+                    mActionMode.setTitle(selectionCount > 0 ? "" + selectionCount : "");
                 }
                 break;
             default:
@@ -250,18 +282,18 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
     }
 
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        MainActivity mainActivity = (MainActivity) getActivity();
-//        mainActivity.onActivityResult(requestCode, resultCode, data);
-//    }
-
+    /**
+     * Refresh list view when list items changed through insert, delete or edit
+     */
     public void onListItemChanged() {
         mCursor = mDbHandler.selectAllRows();
         mAdapter.changeCursor(mCursor);
         mAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Launch the phone's mapping app(s) through intent to view/navigate to the location
+     */
     private void showLocationInMappingApp() {
         mCursor.moveToPosition(mAdapter.mSelectedItemList.get(0));
         double latitude = mCursor.getDouble(LocationDBHandler.LATITUDE);
@@ -269,29 +301,14 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         String name = mCursor.getString(LocationDBHandler.NAME);
         // change name - to any text you want to display
         String uriString = "geo:" + latitude + "," + longitude + "?q=" + latitude + ","
-                +longitude + "(" + name + ")";
+                + longitude + "(" + name + ")";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
         startActivity(intent);
         mAdapter.mSelectedItemList.clear();
-//        mAdapter.mSelectedRowList.clear();
     }
 
+    /* call back interface to show selected location items on map */
     public interface ListFragmentCallback {
-        void showMarkersOnMap(List<MarkerOptions> markers);
+        void showMarkersOnMap (List<MarkerOptions> markers);
     }
-
-//    private void copyTestRowImagesFromResource() {
-//        int testRowImageRes[] = new int[] {R.drawable.r1, R.drawable.r1_tn, R.drawable.r2, R.drawable.r2_tn,
-//         R.drawable.r3, R.drawable.r3_tn, R.drawable.r4, R.drawable.r4_tn, R.drawable.r5, R.drawable.r5_tn,
-//         R.drawable.r6, R.drawable.r6_tn, R.drawable.r7, R.drawable.r7_tn, R.drawable.r8, R.drawable.r8_tn};
-//
-//        String imageFileNames[] = new String[] {"1.jpg", "1_tn.jpg", "2.jpg", "2_tn.jpg", "3.jpg", "3_tn.jpg",
-//         "4.jpg", "4_tn.jpg", "5.jpg", "5_tn.jpg", "6.jpg", "6_tn.jpg", "7.jpg", "7_tn.jpg", "8.jpg", "8_tn.jpg"};
-//
-//        for (int i=0; i<16; i++) {
-//            String imageFilePath = Constants.IMAGE_DIRECTORY + imageFileNames[i];
-//            ImageUtils.saveResourceImageToSdCard(getActivity(), testRowImageRes[i], imageFilePath);
-//        }
-//    }
-
 }

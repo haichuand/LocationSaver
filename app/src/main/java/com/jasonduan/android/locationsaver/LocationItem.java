@@ -1,7 +1,7 @@
 package com.jasonduan.android.locationsaver;
 
 /**
- * Created by hduan on 10/21/2015.
+ * Describes an individual location as used in the app
  */
 public class LocationItem {
     public String name;
@@ -10,7 +10,7 @@ public class LocationItem {
     public String address;
     public String note;
     public String imagePath;
-    public long time;
+    public long time; //current system time in UTC milliseconds
 
     public LocationItem (String name, double latitude, double longitude,
                          String address, String note, String imagePath, long time) {
