@@ -1,11 +1,14 @@
 package com.jasonduan.android.locationsaver;
 
+import android.Manifest;
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,6 +33,7 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
     private static final long timeoutThreshold = 60000L; //threshold of time out to stop service, Unit: ms
     private long timeoutCounter; //counter for time spent in the service
     private Handler handler;
+    private LocationDBHandler dbHandler;
 
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
@@ -71,6 +75,23 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
     public void onCreate() {
         super.onCreate();
         handler = new Handler();
+        dbHandler = LocationDBHandler.getDbInstance(this);
+        //check if permission is granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(LocationSaverService.this, R.string.no_location_permission, Toast.LENGTH_LONG).show();
+                }
+            });
+            stopSelf();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        dbHandler.close();
+        super.onDestroy();
     }
 
     /**
@@ -86,18 +107,42 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
             String source = intent.getStringExtra(Constants.SOURCE);
             if (source != null) {
                 switch(source) {
-                    case Constants.LOCATION_WIDGET_ADD_BUTTON: //get current location and save to db
+                    //get current location and save to db, broadcasting in progress message to widget
+                    case Constants.LOCATION_WIDGET_ADD_BUTTON:
                         Intent broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
                         broadcastIntent.putExtra(Constants.SOURCE, Constants.LOCATION_IN_PROGRESS);
                         sendBroadcast(broadcastIntent);
                         saveCurrentLocation();
                         break;
-                    case Constants.LOCATION_WIDGET_SHOW_LOCATION: //opens ListFragment in app to show location
+                    case Constants.LOCATION_WIDGET_SHOW_LOCATION: //launches ListFragment in app to show location
                         Intent mainActivityIntent = new Intent(this, MainActivity.class);
                         mainActivityIntent.putExtra(Constants.SOURCE, Constants.LIST_FRAGMENT);
                         mainActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(mainActivityIntent);
                         break;
+                    //retrieve first location item in database and broadcast to widget
+                    //if database contains no items, broadcast "no location saved" message
+//                    case Constants.LOCATION_WIDGET_GET_FIRST_LOCATION:
+//                        broadcastIntent = new Intent(Constants.LOCATIONSAVERSERVICE_BROADCAST);
+//                        broadcastIntent.putExtra(Constants.SOURCE, Constants.FIRST_LOCATION_DISPLAY);
+//                        Cursor cursor = dbHandler.getReadableDatabase().query(LocationDBHandler.LocationEntry.TABLE,
+//                                null, null, null, null, null, LocationDBHandler.LocationEntry.COLUMN_TIME + " DESC", "1");
+//                        if (cursor.moveToFirst()) {
+//                            String name = cursor.getString(LocationDBHandler.NAME);
+//                            String description = cursor.getString(LocationDBHandler.ADDRESS);
+//                            if (description == null || description.isEmpty()) {
+//                                description = cursor.getDouble(LocationDBHandler.LATITUDE) + ", " + cursor.getDouble(LocationDBHandler.LONGITUDE);
+//                            }
+//
+//                            broadcastIntent.putExtra(Constants.LOCATION_NAME, name);
+//                            broadcastIntent.putExtra(Constants.LOCATION_DESCRIPTION, description);
+//                        }
+//                        else {
+//                            broadcastIntent.putExtra(Constants.LOCATION_NAME, getString(R.string.no_saved_location));
+//                            broadcastIntent.putExtra(Constants.LOCATION_DESCRIPTION, getString(R.string.press_save_button_hint));
+//                        }
+//                        sendBroadcast(broadcastIntent);
+//                        break;
                     default:
                         assert false;
                 }
@@ -190,8 +235,9 @@ public class LocationSaverService extends IntentService implements GoogleApiClie
         String name = DateFormat.getDateTimeInstance().format(new Date());
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
-        LocationItem item = new LocationItem(name, latitude, longitude, address, null, null, System.currentTimeMillis());
-        LocationDBHandler dbHandler = new LocationDBHandler(this);
+        int accuracyFeet = (int) (location.getAccuracy()/Constants.FOOT_TO_METER);
+        String note = "Accuracy: " + accuracyFeet + " ft";
+        LocationItem item = new LocationItem(name, latitude, longitude, address, note, null, System.currentTimeMillis());
         dbHandler.insertLocation(item);
         return name;
     }

@@ -1,8 +1,12 @@
 package com.jasonduan.android.locationsaver;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,7 +17,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +28,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -35,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
     private static final float TAB_ALPHA_SELECTED = 1.0f;
     private static final float TAB_ALPHA_UNSELECTED = 0.5f;
-    private static final int LOCATION_PERMISSION = 15;
+    public static final int LOCATION_PERMISSION = 15;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -59,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
                 || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
              Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, LOCATION_PERMISSION);
+        }
+        else {
+            makeImageDirectory();
         }
 
         setContentView(R.layout.activity_main);
@@ -92,12 +100,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         if (intent != null) {
             String fragmentToShow = intent.getStringExtra(Constants.SOURCE);
             if (fragmentToShow != null && fragmentToShow.equals(Constants.LIST_FRAGMENT)) {
-                ListFragment listFragment = (ListFragment) findCurrentFragment(1);
-                if (listFragment != null) {
-                    listFragment.onListItemChanged();
-                }
-
-                mViewPager.setCurrentItem(1);
+                onLocationListChanged();
+                mViewPager.setCurrentItem(Constants.LIST_FRAGMENT_POSITION);
                 intent.removeExtra(Constants.SOURCE);
             }
         }
@@ -124,11 +128,10 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("MainActivity", "onActivityResult() called");
+//        Log.d("MainActivity", "onActivityResult() called");
         if (requestCode == Constants.EDIT_ENTRY_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             mViewPager.setCurrentItem(Constants.LIST_FRAGMENT_POSITION);
-            ListFragment listFragment = (ListFragment) findCurrentFragment(1);
-            listFragment.onListItemChanged();
+            onLocationListChanged();
         }
     }
 
@@ -144,8 +147,9 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
     public void makeImageDirectory() {
         File file = new File(Constants.IMAGE_DIRECTORY);
         if (!file.exists()) {
-            if (!file.mkdirs())
-                Log.d(TAG, "Error making directory " + file.getPath());
+            if (!file.mkdirs()) {
+                Toast.makeText(this, R.string.error_making_directory, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -154,10 +158,10 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         LocationFragment locationFragment = (LocationFragment) findCurrentFragment(0);
         if (locationFragment == null) return;
         switch (position) {
-            case 0:
+            case Constants.LOCATION_FRAGMENT_POSITION:
                 locationFragment.startLocationUpdates();
                 break;
-            case 1:
+            case Constants.LIST_FRAGMENT_POSITION:
                 locationFragment.stopLocationUpdates();
                 break;
         }
@@ -265,6 +269,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
         client.disconnect();
     }
 
+    /**
+     * Call ListFragment to notify that location list has changed and needs to refresh
+     */
+    private void onLocationListChanged() {
+        ListFragment listFragment = (ListFragment) findCurrentFragment(Constants.LIST_FRAGMENT_POSITION);
+        if (listFragment != null) {
+            listFragment.onListItemChanged();
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         boolean permissionsGranted = true; //if all permissions are granted
@@ -288,6 +302,45 @@ public class MainActivity extends AppCompatActivity implements ListFragment.List
 
         if (writeExternalStorageIndex > 0) {
             makeImageDirectory();
+            //insert test location if application is launched for the first time
+            final SharedPreferences preferences = getSharedPreferences(Constants.SHAREDPREFERENCES, Context.MODE_PRIVATE);
+            Boolean firstStart = preferences.getBoolean(Constants.FIRST_START, true);
+            if (firstStart) {
+                //use another thread to extract sample images from resources and save to sd card, then insert sample location to database
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        OutputStream os;
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inScaled = false; //so that Android will not rescale images on different dpi devices
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ggb, options);
+                        File file = new File(Constants.IMAGE_DIRECTORY, "ggb.JPG");
+                        try {
+                            os = new FileOutputStream(file);
+                            bm.compress(Bitmap.CompressFormat.JPEG, 80, os);
+                            os.flush();
+                            os.close();
+                        }
+                        catch(Exception e) {
+                            return;
+                        }
+                        bm = BitmapFactory.decodeResource(getResources(), R.drawable.ggb_tn, options);
+                        file = new File(Constants.IMAGE_DIRECTORY, "ggb_tn.JPG");
+                        try {
+                            os = new FileOutputStream(file);
+                            bm.compress(Bitmap.CompressFormat.JPEG, 80, os);
+                            os.flush();
+                            os.close();
+                            LocationDBHandler.getDbInstance(MainActivity.this).insertSampleLocation();
+                            onLocationListChanged();
+                            preferences.edit().putBoolean(Constants.FIRST_START, false).apply();
+                        }
+                        catch(Exception e) {
+                            return;
+                        }
+                    }
+                }).run();
+            }
         }
     }
 }

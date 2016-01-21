@@ -30,7 +30,7 @@
     <string name="no_geocoder_available">Geocoder unavailable. No address updates.</string>
     <string name="incorrect_coords">Incorrect coordinates. Address not updated.</string>
 
-    <string name="error_making_directory">Error making directory</string>
+    <string name="error_making_directory">Error making image directory</string>
 
 
 
@@ -40,7 +40,7 @@
     <string name="deselect_all_items">To open an entry, deselect all items and click</string>
     <string name="address_received">Location address received from Geocoder</string>
 
-    <string name="delete_items_alert">Confirm delete</string>
+    <string name="delete_items_alert">Please confirm</string>
     <string name="delete_item_message_1">Delete </string>
     <string name="delete_item_message_2"> item?</string>
     <string name="delete_items_message_1">Delete these </string>
@@ -59,5 +59,6 @@
     <string name="location_inaccurate">Inaccurate location</string>
     <string name="please_try_later">Please try again later</string>
     
-    <string name="must_have_permission">Error: permission not granted. Location Saver will now exit</string>
+    <string name="must_have_permission">Permissions not granted. Location Saver will now exit</string>
+    <string name="no_location_permission">No permission for accessing location</string>
 </resources>

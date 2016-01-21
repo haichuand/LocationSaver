@@ -91,9 +91,9 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mDbHandler = new LocationDBHandler(getActivity());
-        mCursor = mDbHandler.selectAllRows();
+        mDbHandler = LocationDBHandler.getDbInstance(getContext());
         setHasOptionsMenu(true);
+
     }
 
     @Override
@@ -104,15 +104,9 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
         RecyclerView locationListView = (RecyclerView) v.findViewById(R.id.location_list_view);
         locationListView.setHasFixedSize(true);
         locationListView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mCursor = mDbHandler.selectAllRows();
         mAdapter = new LocationListAdapter(mCursor, this);
         locationListView.setAdapter(mAdapter);
-
-        //insert test locations if the list is empty
-        if (!mCursor.moveToFirst()) {
-            mDbHandler.insertTestRows();
-            onListItemChanged();
-        }
-
         return v;
     }
 
@@ -153,7 +147,7 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
                     .setTitle(R.string.delete_items_alert).setMessage(message)
-                    .setIcon(android.R.drawable.ic_dialog_alert);
+                    .setIcon(R.drawable.icon_warning);
             AlertDialog dlg = builder.create();
             dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.ok),
                     new DialogInterface.OnClickListener() {
@@ -234,12 +228,19 @@ public class ListFragment extends Fragment implements LocationListAdapter.Locati
 
     @Override
     public void onResume() {
+        onListItemChanged();
         super.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        mDbHandler.close();
+        super.onDestroy();
     }
 
     /**

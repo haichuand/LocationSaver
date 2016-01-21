@@ -31,9 +31,9 @@ public class TabPagerAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         switch (position) {
-            case 0:
+            case Constants.LOCATION_FRAGMENT_POSITION:
                 return new LocationFragment();
-            case 1:
+            case Constants.LIST_FRAGMENT_POSITION:
                 return new ListFragment();
             default:
                 return null;

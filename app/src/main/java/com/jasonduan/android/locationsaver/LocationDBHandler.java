@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Database handler for saved locations in the app
+ * Database handler for saved locations in the app. To avoid database access conflicts,
+ * a singleton pattern is used
  */
 public class LocationDBHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
@@ -27,7 +28,23 @@ public class LocationDBHandler extends SQLiteOpenHelper {
     public static final int IMAGE = 6;
     public static final long TIME = 7;
 
-    public LocationDBHandler(Context context) {
+    private static LocationDBHandler dbInstance;
+
+    /**
+     * Call this method to return singleton LocationDBHandler instance.
+     * @param context
+     * @return Singleton instance of LocationDBHandler.
+     */
+    public static synchronized LocationDBHandler getDbInstance(Context context) {
+        // Use the application context, which will ensure that we don't accidentally leak an Activity's context.
+        // See this article for more information: http://bit.ly/6LRzfx
+        if (dbInstance == null) {
+            dbInstance = new LocationDBHandler(context.getApplicationContext());
+        }
+        return dbInstance;
+    }
+
+    private LocationDBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -108,7 +125,7 @@ public class LocationDBHandler extends SQLiteOpenHelper {
     public Cursor selectAllRows() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + LocationDBHandler.LocationEntry.TABLE
-                + " ORDER BY _ID DESC", null);
+                + " ORDER BY " + LocationEntry.COLUMN_TIME + " DESC", null);
         return cursor;
     }
 
@@ -120,7 +137,7 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         String sdPath = Constants.IMAGE_DIRECTORY;
         loc1 = new LocationItem("Seattle Waterfront", 47.607795, -122.342424, "Alaskan Way & Pike St, Seattle, WA 98001, USA", "The most beautiful waterfront!", sdPath+"1_tn.jpg", 1407004217000L);
         loc2 = new LocationItem("McWay Waterfall", 36.159431, -121.672289, "McWay Waterfall Trail, Big Sur, CA 93920", "Beautiful waterfall by the Pacific Ocean", sdPath+"2_tn.jpg", 1441650767000L);
-        loc3 = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "Presidio, San Francisco, CA", "Beach by Golden Gate Bridge", sdPath+"3_tn.jpg", 1422469635000L);
+        loc3 = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "San Francisco, CA", "Looking north at Golden Gate Bridge", sdPath+"3_tn.jpg", 1422469635000L);
         loc4 = new LocationItem("Yosemite Falls", 37.747565, -119.596386, "", "Iconic falls in Yosemite Valley", sdPath+"4_tn.jpg", 1432486111000L);
         loc5 = new LocationItem("Delicate Arch", 38.743650, -109.499252, "", "Beautiful sandstone arch in the high desert of Utah", sdPath+"5_tn.jpg", 1372964485000L);
         loc6 = new LocationItem("Mt. Rainier", 46.787869, -121.736205, "", "On Skyline trail in Paradise area", sdPath+"6_tn.jpg", 1374775429000L);
@@ -136,6 +153,15 @@ public class LocationDBHandler extends SQLiteOpenHelper {
         list.add(loc7);
         list.add(loc8);
         insertLocations(list);
+    }
+
+    /**
+     * Insert one sample location
+     */
+    public void insertSampleLocation() {
+        String sdPath = Constants.IMAGE_DIRECTORY;
+        LocationItem item = new LocationItem("Golden Gate Bridge", 37.791693, -122.484574, "San Francisco, CA", "Looking north at Golden Gate Bridge", sdPath+"ggb_tn.jpg", 1422469635000L);
+        insertLocation(item);
     }
 
     /**

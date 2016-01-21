@@ -53,7 +53,6 @@ public class EditEntryActivity extends AppCompatActivity {
     private Location mLocation;
     private boolean isGetAddress; //flag to indicate if we want to get address through FetchAddressService
     private View.OnClickListener mImageClickListener;
-//    protected GoogleApiClient mGoogleApiClient;
     private boolean mDeleteImageFlag;
     /* Receiver registered with this activity to get the response from FetchAddressIntentService.*/
     private ResultReceiver mResultReceiver;
@@ -67,7 +66,6 @@ public class EditEntryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        buildGoogleApiClient();
         setContentView(R.layout.activity_edit_entry);
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
@@ -129,14 +127,13 @@ public class EditEntryActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-//        mGoogleApiClient.connect();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         mDeleteImageFlag = false;
-        mDbHandler = new LocationDBHandler(this);
+        mDbHandler = LocationDBHandler.getDbInstance(this);
         Intent intent = getIntent();
         if (intent == null) return;
 
@@ -154,7 +151,7 @@ public class EditEntryActivity extends AppCompatActivity {
             mImageView.setTag(ICON_VIEW);
             mImageView.setOnClickListener(mImageClickListener);
             mLocation = intent.getParcelableExtra(Constants.BUNDLE_LOCATION);
-            int accuracyFeet = (int) mLocation.getAccuracy() * 3;
+            int accuracyFeet = (int) (mLocation.getAccuracy()/Constants.FOOT_TO_METER);
             mLatitude = mLocation.getLatitude();
             mLongitude = mLocation.getLongitude();
             mCoordView.setText(mLatitude + ", " + mLongitude);
@@ -192,7 +189,8 @@ public class EditEntryActivity extends AppCompatActivity {
                         mImageView.setImageURI(imageUri);
                         mImageView.setTag(IMAGE_VIEW);
                         return;
-                    } else {
+                    }
+                    else {
                         imageFile = new File(mThumbnailImagePath);
                         if (imageFile.exists()) {
                             imageUri = Uri.parse(mThumbnailImagePath);
@@ -202,8 +200,9 @@ public class EditEntryActivity extends AppCompatActivity {
                         }
                     }
                 }
-                mImageView.setImageResource(R.drawable.icon_image);
+                mImageView.setImageResource(R.drawable.icon_camera);
                 mImageView.setTag(ICON_VIEW);
+                mImageView.setOnClickListener(mImageClickListener);
             }
         }
 
@@ -237,14 +236,6 @@ public class EditEntryActivity extends AppCompatActivity {
         super.onPause();
     }
 
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-//            mGoogleApiClient.disconnect();
-//        }
-//    }
-
     @Override
     protected void onSaveInstanceState(Bundle instanceState) {
         if (mThumbnailImagePath != null) {
@@ -277,14 +268,6 @@ public class EditEntryActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(menuItem);
     }
-
-//    protected synchronized void buildGoogleApiClient() {
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addConnectionCallbacks(this)
-//                .addOnConnectionFailedListener(this)
-//                .addApi(LocationServices.API)
-//                .build();
-//    }
 
     /**
      * Start the phone's camera app through intent and return the image to  this activity
@@ -321,31 +304,6 @@ public class EditEntryActivity extends AppCompatActivity {
             new makeThumbnailTask(mImageView).execute(mSaveImagePath);
         }
     }
-
-
-    /**
-     * Runs when a GoogleApiClient object successfully connects.
-     */
-//    @Override
-//    public void onConnected(Bundle connectionHint) {
-//        if (!Geocoder.isPresent()) {
-//            Toast.makeText(this, R.string.no_geocoder_available, Toast.LENGTH_LONG).show();
-//            return;
-//        }
-//
-//        if (isGetAddress)
-//            getAddress();
-//    }
-
-//    @Override
-//    public void onConnectionSuspended(int i) {
-//
-//    }
-//
-//    @Override
-//    public void onConnectionFailed(ConnectionResult connectionResult) {
-//
-//    }
 
     /**
      * Launches FetchAddressService through intent to get text representation of address in mLocation
@@ -389,7 +347,7 @@ public class EditEntryActivity extends AppCompatActivity {
     }
 
     /**
-     * Save the current location in database
+     * Save or update the current location in database
      */
     private void saveLocation() {
         /* if the activity is launched through clicking an entry in ListFragment, rowId will be set
@@ -401,7 +359,8 @@ public class EditEntryActivity extends AppCompatActivity {
             }
             mDbHandler.insertLocation(new LocationItem(nameText.toString(), mLatitude, mLongitude,
                     mAddressView.getText().toString(), mNoteView.getText().toString(), mThumbnailImagePath, System.currentTimeMillis()));
-        } else {
+        }
+        else {
             ContentValues values = new ContentValues();
             if (mNameView.getText().length() == 0) {
                 Toast.makeText(this, R.string.name_field_required, Toast.LENGTH_SHORT).show();
@@ -432,7 +391,7 @@ public class EditEntryActivity extends AppCompatActivity {
     }
 
     /**
-     * Deletes both the thumbnail image and the bigger image
+     * Deletes both the thumbnail image and the original image
      */
     private void deleteImages() {
         File file;
@@ -487,11 +446,11 @@ public class EditEntryActivity extends AppCompatActivity {
                 //the image is taken. We use a utility method to re-orient the image
                 orientedBitmap = ImageUtils.rotateBitmap(imagePath, originalBitmap);
             } catch (Exception e) {
-                Log.d("EditEntryActivity", "Error decoding bitmap " + imagePath);
+                Log.e("EditEntryActivity", "Error decoding bitmap " + imagePath);
             }
 
             if (orientedBitmap == null) {
-                Log.d("EditEntryActivity", "Failure getting Bitmap from " + imagePath);
+                Log.e("EditEntryActivity", "Failure getting Bitmap from " + imagePath);
                 return null;
             }
 
@@ -516,9 +475,9 @@ public class EditEntryActivity extends AppCompatActivity {
                 resized.compress(Bitmap.CompressFormat.JPEG, 90, fos);
                 fos.close();
             } catch (FileNotFoundException e) {
-                Log.d("makeThumbnailTask", "File not found: " + e.getMessage());
+                Log.e("makeThumbnailTask", "File not found: " + e.getMessage());
             } catch (IOException e) {
-                Log.d("makeThumbnailTask", "Error accessing file: " + e.getMessage());
+                Log.e("makeThumbnailTask", "Error accessing file: " + e.getMessage());
             }
 
             //resizes image to max dimension 480 for show in ListFragment
@@ -528,7 +487,7 @@ public class EditEntryActivity extends AppCompatActivity {
             if (dotIndex > 0) {
                 baseImageName = imagePath.substring(0, dotIndex);
             } else {
-                Log.d("makeThumbnailTask", "Error extracting base image name");
+                Log.e("makeThumbnailTask", "Error extracting base image name");
                 return null;
             }
             mThumbnailImagePath = baseImageName + "_tn.jpg";
@@ -538,9 +497,9 @@ public class EditEntryActivity extends AppCompatActivity {
                 thumbnailBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
                 fos.close();
             } catch (FileNotFoundException e) {
-                Log.d("makeThumbnailTask", "File not found: " + e.getMessage());
+                Log.e("makeThumbnailTask", "File not found: " + e.getMessage());
             } catch (IOException e) {
-                Log.d("makeThumbnailTask", "Error accessing file: " + e.getMessage());
+                Log.e("makeThumbnailTask", "Error accessing file: " + e.getMessage());
             }
             return imagePath;
         }

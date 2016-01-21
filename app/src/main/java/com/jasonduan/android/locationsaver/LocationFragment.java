@@ -1,14 +1,16 @@
 package com.jasonduan.android.locationsaver;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,6 +29,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -39,7 +42,7 @@ import java.util.List;
  * Fragment to show Google Map and let user save current location
  */
 public class LocationFragment extends Fragment implements LocationListener, ConnectionCallbacks,
-        OnConnectionFailedListener {
+        OnConnectionFailedListener, OnMapReadyCallback {
     //location update interval in milliseconds
     private static final int UPDATE_INTERVAL=3000;
     private final int FASTEST_UPDATE_INTERVAL=1000;
@@ -119,24 +122,18 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_location, container, false);
-        mMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        mMap = mMapFragment.getMap();
-        mMap.setMyLocationEnabled(true);
-        Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mCurrentLocation != null) {
-            CameraUpdate center = CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), DEFAULT_MAP_ZOOM);
-            mMap.moveCamera(center);
-        }
-
         mAccuracyView = (TextView) view.findViewById(R.id.text_accuracy);
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_save_location);
+        mMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 saveCurrentLocation();
             }
         });
+        if (mMap == null) {
+            mMapFragment.getMapAsync(this);
+        }
         return view;
     }
 
@@ -148,7 +145,12 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     @Override
     public void onResume() {
         super.onResume();
-        startLocationUpdates();
+        if (mMap == null) {
+            mMapFragment.getMapAsync(this);
+        }
+        else {
+            startLocationUpdates();
+        }
     }
 
 
@@ -200,7 +202,10 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         }
         if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
-        } else if (((MainActivity) getActivity()).mViewPager.getCurrentItem() == 0) { //only when current fragment is being viewed
+        }
+        //only when current fragment is being viewed and location permission is granted
+        else if (((MainActivity) getActivity()).mViewPager.getCurrentItem() == 0 &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
     }
@@ -228,13 +233,13 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
      */
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d(TAG, "GoogleApiClient connection suspended");
+//        Log.d(TAG, "GoogleApiClient connection suspended");
         mGoogleApiClient.connect();
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.d(TAG, "GoogleApiClient connection failed");
+//        Log.d(TAG, "GoogleApiClient connection failed");
     }
 
     /**
@@ -243,7 +248,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
      */
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(TAG, "onLocationChanged() called");
+//        Log.d(TAG, "onLocationChanged() called");
         mCurrentLocation = location;
         //convert accuracy from meters to feet
         mAccuracy = (int) Math.round(mCurrentLocation.getAccuracy()/0.3045);
@@ -287,7 +292,7 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
     public void showMarkers(List<MarkerOptions> markers) {
         CameraUpdate cu;
         if (markers.size()==0) {
-            Log.d(TAG, "showMarkers(List<MarkerOptions>): markers list empty");
+//            Log.d(TAG, "showMarkers(List<MarkerOptions>): markers list empty");
             return;
         }
 
@@ -311,4 +316,18 @@ public class LocationFragment extends Fragment implements LocationListener, Conn
         mActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(mActionModeCallback);
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (lastLocation != null) {
+                CameraUpdate center = CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), DEFAULT_MAP_ZOOM);
+                mMap.moveCamera(center);
+            }
+            startLocationUpdates();
+        }
+    }
 }

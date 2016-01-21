@@ -6,8 +6,9 @@ import android.os.Environment;
  * Constants used in the app
  */
 public final class Constants {
-    public static final int SUCCESS_RESULT = 100;
+    public static final float FOOT_TO_METER = 0.3048f;
 
+    public static final int SUCCESS_RESULT = 100;
     public static final int FAILURE_RESULT = 111;
 
     public static final int LOCATION_FRAGMENT_POSITION = 0;
@@ -49,14 +50,16 @@ public final class Constants {
     public static final String LOCATION_NAME = "LOCATION_NAME";
     public static final String LOCATION_DESCRIPTION = "LOCATION_DESCRIPTION";
 
-    public static final String LOCATION_WIDGET_ADD_BUTTON = "LOCATION_WIDGET_ADD_BUTTON";
-    public static final String LOCATION_WIDGET_SHOW_LOCATION = "LOCATION_WIDGET_SHOW_LOCATION";
+    public static final String LOCATION_WIDGET_ADD_BUTTON = "Save current location";
+    public static final String LOCATION_WIDGET_SHOW_LOCATION = "Show location in list";
+    public static final String LOCATION_WIDGET_GET_FIRST_LOCATION = "Get first location in database";
+
 
     public static final int LOCATION_SAVED = 4813;
     public static final int LOCATION_IN_PROGRESS = 1914;
     public static final int LOCATION_FAILED = 7076;
     public static final int LOCATION_INACCURATE = 2391;
 
-    public static final String SHAREDPREFERENCE = PACKAGE_NAME + ".SharedPreference";
-    public static final String NO_LOCATION_SAVED = "No location saved";
+    public static final String SHAREDPREFERENCES = PACKAGE_NAME + ".SharedPreferences";
+    public static final String FIRST_START = "Application first started";
 }
